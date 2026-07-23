@@ -520,18 +520,10 @@
                         <!-- Se calcula dinámicamente con JS -->
                     </div>
 
-                    {{-- Botones de Acción --}}
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                        {{-- Botón Guardar --}}
-                        <button type="button" onclick="guardarConfiguracionBackup()" class="btn-save-schedule" style="width: 100%; justify-content: center; height: 42px; font-size: 14px;">
-                            <i class="fas fa-save"></i> Guardar Programación
-                        </button>
-                        
-                        {{-- Botón Probar Programación --}}
-                        <button type="button" onclick="probarProgramacionBackup()" class="backup-btn-action" style="width: 100%; justify-content: center; height: 42px; font-size: 13.5px; border-color: rgba(217, 119, 6, 0.25) !important; color: #d97706 !important; background: rgba(217, 119, 6, 0.06) !important; margin: 0; border-radius: 10px !important; box-sizing: border-box;" onmouseover="this.style.background='#d97706'; this.style.color='white'; this.style.borderColor='#d97706';" onmouseout="this.style.background='rgba(217, 119, 6, 0.06)'; this.style.color='#d97706'; this.style.borderColor='rgba(217, 119, 6, 0.25)';">
-                            <i class="fas fa-play"></i> Probar Programación Ahora
-                        </button>
-                    </div>
+                    {{-- Botón Guardar --}}
+                    <button type="button" onclick="guardarConfiguracionBackup()" class="btn-save-schedule" style="width: 100%; justify-content: center; height: 42px; font-size: 14px;">
+                        <i class="fas fa-save"></i> Guardar Programación
+                    </button>
                 </div>
 
             </div>
@@ -1048,73 +1040,6 @@
                 background: isDark ? '#1e293b' : '#ffffff',
                 color: isDark ? '#f1f5f9' : '#1e293b',
             });
-        });
-    }
-
-    // Ejecutar una prueba del cron de backup automático de forma inmediata
-    function probarProgramacionBackup() {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        
-        Swal.fire({
-            title: '¿Ejecutar respaldo de prueba?',
-            text: 'Se iniciará la creación inmediata del backup automático (base de datos + archivos del storage) para verificar su correcto funcionamiento.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#d97706',
-            cancelButtonColor: '#475569',
-            confirmButtonText: 'Sí, probar ahora',
-            cancelButtonText: 'Cancelar',
-            background: isDark ? '#1e293b' : '#ffffff',
-            color: isDark ? '#f1f5f9' : '#1e293b',
-        }).then((result) => {
-            if (result.isConfirmed) {
-                showLoader('Ejecutando Prueba', 'Comprimiendo storage y generando archivo SQL...');
-                
-                fetch("{{ route('backups.testCron') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    hideLoader();
-                    if (data.success) {
-                        Swal.fire({
-                            title: '¡Prueba Exitosa!',
-                            text: data.message,
-                            icon: 'success',
-                            confirmButtonColor: '#10b981',
-                            background: isDark ? '#1e293b' : '#ffffff',
-                            color: isDark ? '#f1f5f9' : '#1e293b',
-                        }).then(() => {
-                            window.location.reload();
-                        });
-                    } else {
-                        Swal.fire({
-                            title: 'Error de Prueba',
-                            text: data.error || 'No se pudo generar el respaldo de prueba.',
-                            icon: 'error',
-                            confirmButtonColor: '#ef4444',
-                            background: isDark ? '#1e293b' : '#ffffff',
-                            color: isDark ? '#f1f5f9' : '#1e293b',
-                        });
-                    }
-                })
-                .catch(err => {
-                    hideLoader();
-                    console.error(err);
-                    Swal.fire({
-                        title: 'Error de conexión',
-                        text: 'Ocurrió un error al intentar comunicarse con el servidor.',
-                        icon: 'error',
-                        confirmButtonColor: '#ef4444',
-                        background: isDark ? '#1e293b' : '#ffffff',
-                        color: isDark ? '#f1f5f9' : '#1e293b',
-                    });
-                });
-            }
         });
     }
 </script>

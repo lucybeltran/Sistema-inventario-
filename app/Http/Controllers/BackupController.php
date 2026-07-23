@@ -376,24 +376,4 @@ class BackupController extends Controller
             ], 500);
         }
     }
-
-    public function testCron()
-    {
-        if (!Auth::user()->esAdmin()) {
-            return response()->json(['error' => 'No autorizado'], 403);
-        }
-
-        try {
-            $resultado = $this->generarRespaldoInterno('Prueba de Programación');
-            return response()->json([
-                'success' => true,
-                'message' => 'El respaldo programado de prueba se ejecutó con éxito y se guardó como: ' . $resultado['filename']
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Error al ejecutar respaldo de prueba: ' . $e->getMessage()
-            ], 500);
-        }
-    }
 }
