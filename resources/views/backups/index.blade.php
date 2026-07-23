@@ -223,6 +223,110 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+    /* Estilos del panel de programador de backup */
+    .backup-schedule-card {
+        background: var(--bg-card, #fff);
+        border: 1.5px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 25px;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .backup-schedule-card h3 {
+        margin: 0 0 16px 0;
+        font-size: 15.5px;
+        color: var(--text-primary);
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .backup-schedule-grid-top {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 20px;
+        align-items: center;
+        padding-bottom: 16px;
+    }
+
+    .backup-schedule-grid-bottom {
+        display: grid;
+        grid-template-columns: 250px 250px 1fr auto;
+        gap: 20px;
+        align-items: flex-end;
+        border-top: 1.5px dashed var(--border);
+        padding-top: 18px;
+    }
+
+    .backup-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .backup-form-group label {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--text-secondary);
+    }
+
+    .backup-input {
+        height: 42px;
+        padding: 0 14px;
+        border-radius: 10px;
+        border: 1.5px solid var(--border);
+        background: var(--bg-main, #f7fafc);
+        color: var(--text-primary);
+        font-size: 13.5px;
+        font-weight: 600;
+        outline: none;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .backup-input:focus {
+        border-color: #d97706;
+        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+    }
+
+    select.backup-input {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234b5563'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px;
+        padding-right: 36px;
+        cursor: pointer;
+    }
+    
+    [data-theme="dark"] select.backup-input {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    }
+
+    .btn-save-schedule {
+        background: #d97706;
+        color: white;
+        border: none;
+        padding: 0 24px;
+        height: 42px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 13.5px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 10px rgba(217, 119, 6, 0.2);
+    }
+
+    .btn-save-schedule:hover {
+        background: #f59e0b;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 15px rgba(217, 119, 6, 0.3);
+    }
 </style>
 @endpush
 
@@ -267,87 +371,67 @@
     </div>
 
     {{-- CARD DE CONFIGURACIÓN AUTOMÁTICA --}}
-    <div style="background: var(--bg-card, #fff); border: 1.5px solid var(--border); border-radius: 16px; padding: 22px; margin-bottom: 25px; box-shadow: var(--shadow);">
-        <h3 style="margin: 0 0 14px 0; font-size: 16px; color: var(--text-primary); font-weight: 700; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-clock" style="color: var(--primary);"></i> Programación de Respaldos Automáticos
+    <div class="backup-schedule-card">
+        <h3>
+            <i class="fas fa-clock" style="color:#d97706;"></i> Programación de Respaldos Automáticos
         </h3>
         
-        <form id="form-config-backup" style="display: flex; flex-direction: column; gap: 20px;">
-            
-            {{-- Primera fila: Habilitar y Hora --}}
-            <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
+        <form id="form-config-backup" style="margin:0;">
+            {{-- Fila superior --}}
+            <div class="backup-schedule-grid-top">
                 {{-- Checkbox Habilitar --}}
-                <div style="flex: 1; min-width: 250px;">
-                    <label style="display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 600; color: var(--text-primary); cursor: pointer;">
-                        <input type="checkbox" id="backup_auto_habilitado" name="habilitado" value="1" {{ ($config['habilitado'] ?? '0') === '1' ? 'checked' : '' }} style="width: 17px; height: 17px; accent-color: var(--primary); cursor: pointer;">
+                <div>
+                    <label style="display:flex; align-items:center; gap:10px; font-size:14px; font-weight:700; color:var(--text-primary); cursor:pointer;">
+                        <input type="checkbox" id="backup_auto_habilitado" name="habilitado" value="1" {{ ($config['habilitado'] ?? '0') === '1' ? 'checked' : '' }} style="width:18px; height:18px; accent-color:#d97706; cursor:pointer;">
                         Activar copias de seguridad automáticas
                     </label>
-                    <p style="margin: 6px 0 0 27px; font-size: 12px; color: var(--text-muted); line-height: 1.4;">
-                        El servidor generará un respaldo completo del sistema de forma automática en segundo plano.
+                    <p style="margin:4px 0 0 28px; font-size:12.5px; color:var(--text-muted); line-height:1.4;">
+                        El servidor generará un respaldo completo del sistema (Base de datos y fotos del storage) de forma automática.
                     </p>
                 </div>
 
                 {{-- Hora de ejecución --}}
-                <div style="width: 180px;">
-                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Hora del Respaldo</label>
-                    <input type="time" id="backup_auto_hora" name="hora" value="{{ $config['hora'] ?? '23:00' }}" style="width: 100%; height: 38px; padding: 0 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 13.5px;">
+                <div class="backup-form-group">
+                    <label>Hora del Respaldo</label>
+                    <input type="time" id="backup_auto_hora" name="hora" class="backup-input" value="{{ $config['hora'] ?? '23:00' }}" style="width:160px;">
                 </div>
             </div>
 
-            {{-- Segunda fila: Frecuencia y Detalles Dinámicos --}}
-            <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; border-top: 1px dashed var(--border); padding-top: 15px;">
+            {{-- Fila inferior --}}
+            <div class="backup-schedule-grid-bottom">
                 
                 {{-- Frecuencia Select --}}
-                <div style="width: 250px;">
-                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Frecuencia del Respaldo</label>
-                    <select id="backup_auto_frecuencia" name="frecuencia" onchange="mostrarOpcionesFrecuencia(this.value)" style="width: 100%; height: 38px; padding: 0 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 13.5px; cursor: pointer; font-weight: 600;">
-                        <option value="diario" {{ ($config['frecuencia'] ?? 'diario') === 'diario' ? 'selected' : '' }}>Diario (Todos los días)</option>
-                        <option value="semanal" {{ ($config['frecuencia'] ?? '') === 'semanal' ? 'selected' : '' }}>Semanal (Un día de la semana)</option>
-                        <option value="mensual" {{ ($config['frecuencia'] ?? '') === 'mensual' ? 'selected' : '' }}>Mensual (Un día del mes)</option>
-                        <option value="fecha_unica" {{ ($config['frecuencia'] ?? '') === 'fecha_unica' ? 'selected' : '' }}>Fecha Única (Una sola vez)</option>
+                <div class="backup-form-group">
+                    <label>Frecuencia del Respaldo</label>
+                    <select id="backup_auto_frecuencia" name="frecuencia" class="backup-input" onchange="mostrarOpcionesFrecuencia(this.value)">
+                        <option value="ultimo_dia_mes" {{ ($config['frecuencia'] ?? 'ultimo_dia_mes') === 'ultimo_dia_mes' ? 'selected' : '' }}>Mensual (Último día de cada mes)</option>
+                        <option value="fecha_unica" {{ ($config['frecuencia'] ?? '') === 'fecha_unica' ? 'selected' : '' }}>Fecha Exacta (Una sola vez)</option>
                     </select>
                 </div>
 
-                {{-- Detalles Dinámicos: Semanal --}}
-                <div id="wrapper-dia-semana" style="width: 250px; display: none;">
-                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Día de la Semana</label>
-                    <select id="backup_auto_dia_semana" name="dia_semana" style="width: 100%; height: 38px; padding: 0 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 13.5px; cursor: pointer;">
-                        <option value="1" {{ ($config['dia_semana'] ?? '1') == '1' ? 'selected' : '' }}>Lunes</option>
-                        <option value="2" {{ ($config['dia_semana'] ?? '1') == '2' ? 'selected' : '' }}>Martes</option>
-                        <option value="3" {{ ($config['dia_semana'] ?? '1') == '3' ? 'selected' : '' }}>Miércoles</option>
-                        <option value="4" {{ ($config['dia_semana'] ?? '1') == '4' ? 'selected' : '' }}>Jueves</option>
-                        <option value="5" {{ ($config['dia_semana'] ?? '1') == '5' ? 'selected' : '' }}>Viernes</option>
-                        <option value="6" {{ ($config['dia_semana'] ?? '1') == '6' ? 'selected' : '' }}>Sábado</option>
-                        <option value="7" {{ ($config['dia_semana'] ?? '1') == '7' ? 'selected' : '' }}>Domingo</option>
-                    </select>
-                </div>
-
-                {{-- Detalles Dinámicos: Mensual --}}
-                <div id="wrapper-dia-mes" style="width: 250px; display: none;">
-                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Día del Mes</label>
-                    <select id="backup_auto_dia_mes" name="dia_mes" style="width: 100%; height: 38px; padding: 0 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 13.5px; cursor: pointer;">
-                        <option value="ultimo" {{ ($config['dia_mes'] ?? 'ultimo') === 'ultimo' ? 'selected' : '' }}>Último día del mes (Recomendado)</option>
-                        @for ($i = 1; $i <= 28; $i++)
-                            <option value="{{ $i }}" {{ ($config['dia_mes'] ?? '') == $i ? 'selected' : '' }}>Día {{ $i }}</option>
-                        @endfor
-                    </select>
-                </div>
+                {{-- Oculto para fecha de semana/mes (no requerido) pero mantenemos inputs ocultos/vacíos para retrocompatibilidad JS --}}
+                <input type="hidden" id="backup_auto_dia_semana" value="1">
+                <input type="hidden" id="backup_auto_dia_mes" value="ultimo">
 
                 {{-- Detalles Dinámicos: Fecha Única --}}
-                <div id="wrapper-fecha-unica" style="width: 250px; display: none;">
-                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Fecha Exacta</label>
-                    <input type="date" id="backup_auto_fecha_unica" name="fecha_unica" value="{{ $config['fecha_unica'] ?? '' }}" style="width: 100%; height: 38px; padding: 0 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 13.5px;">
+                <div id="wrapper-fecha-unica" class="backup-form-group" style="display:none;">
+                    <label>Fecha de Ejecución</label>
+                    <input type="date" id="backup_auto_fecha_unica" name="fecha_unica" class="backup-input" value="{{ $config['fecha_unica'] ?? '' }}">
+                </div>
+                
+                {{-- Info de ejecución calculado --}}
+                <div id="info-proximo-backup" style="font-size: 13.5px; font-weight: 700; min-height: 42px; display: flex; align-items: center; padding-left: 10px;">
+                    <!-- Se calculará dinámicamente con JS -->
                 </div>
 
                 {{-- Botón Guardar --}}
-                <div style="margin-left: auto;">
-                    <button type="button" onclick="guardarConfiguracionBackup()" style="background: var(--primary); color: white; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; height: 38px; transition: all 0.2s;" onmouseover="this.style.opacity='0.9';" onmouseout="this.style.opacity='1';">
+                <div>
+                    <button type="button" onclick="guardarConfiguracionBackup()" class="btn-save-schedule">
                         <i class="fas fa-save"></i> Guardar Programación
                     </button>
                 </div>
 
             </div>
-
         </form>
     </div>
 
@@ -713,9 +797,57 @@
         });
     }
     function mostrarOpcionesFrecuencia(frecuencia) {
-        document.getElementById('wrapper-dia-semana').style.display = (frecuencia === 'semanal') ? 'block' : 'none';
-        document.getElementById('wrapper-dia-mes').style.display = (frecuencia === 'mensual') ? 'block' : 'none';
-        document.getElementById('wrapper-fecha-unica').style.display = (frecuencia === 'fecha_unica') ? 'block' : 'none';
+        const wrapperFechaUnica = document.getElementById('wrapper-fecha-unica');
+        if (wrapperFechaUnica) {
+            wrapperFechaUnica.style.display = (frecuencia === 'fecha_unica') ? 'block' : 'none';
+        }
+        calcularProximaEjecucion();
+    }
+
+    function calcularProximaEjecucion() {
+        const habilitado = document.getElementById('backup_auto_habilitado').checked;
+        const infoProximo = document.getElementById('info-proximo-backup');
+        
+        if (!infoProximo) return;
+        
+        if (!habilitado) {
+            infoProximo.innerHTML = '<span style="color: var(--text-muted);"><i class="fas fa-ban"></i> Respaldos automáticos desactivados</span>';
+            return;
+        }
+
+        const horaInput = document.getElementById('backup_auto_hora').value || '23:00';
+        const frecuencia = document.getElementById('backup_auto_frecuencia').value;
+        const fechaUnica = document.getElementById('backup_auto_fecha_unica').value;
+
+        if (frecuencia === 'fecha_unica') {
+            if (!fechaUnica) {
+                infoProximo.innerHTML = '<span style="color: #ef4444; font-size:12.5px;"><i class="fas fa-exclamation-circle"></i> Selecciona fecha de ejecución</span>';
+                return;
+            }
+            const partes = fechaUnica.split('-');
+            const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            infoProximo.innerHTML = `<span style="color: #ea580c; font-weight:700;"><i class="fas fa-calendar-check"></i> Próximo: ${fechaFormateada} a las ${horaInput}</span>`;
+        } else if (frecuencia === 'ultimo_dia_mes') {
+            const hoy = new Date();
+            const [hora, min] = horaInput.split(':').map(Number);
+            
+            const ultimoDiaActual = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+            ultimoDiaActual.setHours(hora, min, 0, 0);
+
+            let fechaProxima;
+            if (hoy.getTime() > ultimoDiaActual.getTime()) {
+                fechaProxima = new Date(hoy.getFullYear(), hoy.getMonth() + 2, 0);
+            } else {
+                fechaProxima = ultimoDiaActual;
+            }
+
+            const dia = String(fechaProxima.getDate()).padStart(2, '0');
+            const mes = String(fechaProxima.getMonth() + 1).padStart(2, '0');
+            const anio = fechaProxima.getFullYear();
+            const fechaFormateada = `${dia}/${mes}/${anio}`;
+
+            infoProximo.innerHTML = `<span style="color: #10b981; font-weight:700;"><i class="fas fa-calendar-check"></i> Próximo: ${fechaFormateada} a las ${horaInput} (Fin de mes)</span>`;
+        }
     }
 
     // Inicializar visualización de campos al cargar la página
@@ -724,6 +856,23 @@
         if (selectFrecuencia) {
             mostrarOpcionesFrecuencia(selectFrecuencia.value);
         }
+
+        // Registrar oyentes para recálculo dinámico en tiempo real
+        const inputs = [
+            'backup_auto_habilitado',
+            'backup_auto_hora',
+            'backup_auto_frecuencia',
+            'backup_auto_fecha_unica'
+        ];
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', calcularProximaEjecucion);
+                el.addEventListener('change', calcularProximaEjecucion);
+            }
+        });
+
+        calcularProximaEjecucion();
     });
 
     // Guardar configuración de respaldo automático programado

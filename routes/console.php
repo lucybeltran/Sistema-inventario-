@@ -32,10 +32,21 @@ Schedule::call(function () {
         return;
     }
 
-    // 3. Verificar si se debe ejecutar solo el último día del mes
-    $soloFinDeMes = \App\Models\Configuracion::obtener('backup_auto_ultimo_dia_mes', '1');
-    if ($soloFinDeMes === '1' && !now()->isLastOfMonth()) {
-        return;
+    // 3. Verificar frecuencia
+    $frecuencia = \App\Models\Configuracion::obtener('backup_auto_frecuencia', 'ultimo_dia_mes');
+
+    if ($frecuencia === 'ultimo_dia_mes') {
+        if (!now()->isLastOfMonth()) {
+            return;
+        }
+    } elseif ($frecuencia === 'fecha_unica') {
+        $fechaConfig = \App\Models\Configuracion::obtener('backup_auto_fecha_unica', '');
+        if (now()->format('Y-m-d') !== $fechaConfig) {
+            return;
+        }
+        
+        // Auto-desactivar después de ejecutarse
+        \App\Models\Configuracion::guardar('backup_auto_habilitado', '0');
     }
 
     // 4. Ejecutar el backup completo
