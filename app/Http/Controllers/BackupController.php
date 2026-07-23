@@ -40,7 +40,109 @@ class BackupController extends Controller
             return $b['created_at']->timestamp <=> $a['created_at']->timestamp;
         });
 
-        return view('backups.index', compact('backups'));
+        // Configuración de backup automático
+        $config = [
+            'habilitado' => \App\Models\Configuracion::obtener('backup_auto_habilitado', '0'),
+            'hora' => \App\Models\Configuracion::obtener('backup_auto_hora', '23:00'),
+            'frecuencia' => \App\Models\Configuracion::obtener('backup_auto_frecuencia', 'diario'),
+            'dia_semana' => \App\Models\Configuracion::obtener('backup_auto_dia_semana', '1'),
+            'dia_mes' => \App\Models\Configuracion::obtener('backup_auto_dia_mes', 'ultimo'),
+            'fecha_unica' => \App\Models\Configuracion::obtener('backup_auto_fecha_unica', ''),
+        ];
+
+        return view('backups.index', compact('backups', 'config'));
+    }
+
+    /**
+     * Genera un respaldo completo de forma interna (usado por el planificador o el controlador)
+     */
+    public function generarRespaldoInterno($creadoPor = 'Sistema')
+    {
+        $backupDir = storage_path('app/backups');
+        if (!File::exists($backupDir)) {
+            File::makeDirectory($backupDir, 0755, true);
+        }
+
+        $filename = 'backup-' . date('Y-m-d_H-i-s') . '.zip';
+        $zipPath = $backupDir . '/' . $filename;
+
+        // Generar volcado SQL
+        $sqlContent = "-- Copia de seguridad del Sistema de Inventario\n";
+        $sqlContent .= "-- Fecha de generación: " . date('Y-m-d H:i:s') . "\n";
+        $sqlContent .= "-- Creado por: " . $creadoPor . "\n";
+        $sqlContent .= "SET FOREIGN_KEY_CHECKS = 0;\n\n";
+
+        $tables = DB::select('SHOW TABLES');
+        $dbNameKey = 'Tables_in_' . env('DB_DATABASE');
+
+        foreach ($tables as $table) {
+            $tableName = $table->$dbNameKey;
+
+            $sqlContent .= "-- -----------------------------------------------------\n";
+            $sqlContent .= "-- Estructura de tabla para la tabla `$tableName`\n";
+            $sqlContent .= "-- -----------------------------------------------------\n";
+            $sqlContent .= "DROP TABLE IF EXISTS `$tableName`;\n";
+            
+            $showCreate = DB::select("SHOW CREATE TABLE `$tableName`")[0];
+            $createTableKey = 'Create Table';
+            $sqlContent .= $showCreate->$createTableKey . ";\n\n";
+
+            $rows = DB::table($tableName)->get();
+            if ($rows->count() > 0) {
+                $sqlContent .= "-- Datos para la tabla `$tableName`\n";
+                foreach ($rows as $row) {
+                    $rowArray = (array) $row;
+                    $keys = array_keys($rowArray);
+                    $escapedValues = array_map(function ($value) {
+                        if (is_null($value)) {
+                            return 'NULL';
+                        }
+                        return "'" . str_replace(["\\", "'", "\r", "\n"], ["\\\\", "\\'", "\\r", "\\n"], $value) . "'";
+                    }, array_values($rowArray));
+
+                    $sqlContent .= "INSERT INTO `$tableName` (`" . implode("`, `", $keys) . "`) VALUES (" . implode(", ", $escapedValues) . ");\n";
+                }
+                $sqlContent .= "\n";
+            }
+        }
+
+        $sqlContent .= "SET FOREIGN_KEY_CHECKS = 1;\n";
+
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+            $zip->addFromString('database.sql', $sqlContent);
+
+            $storageDir = storage_path('app/public');
+            if (File::exists($storageDir)) {
+                $files = new \RecursiveIteratorIterator(
+                    new \RecursiveDirectoryIterator($storageDir),
+                    \RecursiveIteratorIterator::LEAVES_ONLY
+                );
+
+                foreach ($files as $name => $file) {
+                    if (!$file->isDir()) {
+                        $filePath = $file->getRealPath();
+                        $relativePath = 'storage/' . substr($filePath, strlen($storageDir) + 1);
+                        $relativePath = str_replace('\\', '/', $relativePath);
+                        $zip->addFile($filePath, $relativePath);
+                    }
+                }
+            }
+
+            $zip->close();
+        } else {
+            throw new \Exception("No se pudo iniciar la creación del archivo ZIP.");
+        }
+
+        AuditoriaLog::registrar(
+            'CREACION_RESPALDO',
+            "El {$creadoPor} generó una copia de seguridad automática completa: {$filename}."
+        );
+
+        return [
+            'success' => true,
+            'filename' => $filename
+        ];
     }
 
     public function create()
@@ -50,101 +152,12 @@ class BackupController extends Controller
         }
 
         try {
-            $backupDir = storage_path('app/backups');
-            if (!File::exists($backupDir)) {
-                File::makeDirectory($backupDir, 0755, true);
-            }
-
-            // Generar archivo ZIP que contendrá base de datos y archivos de storage
-            $filename = 'backup-' . date('Y-m-d_H-i-s') . '.zip';
-            $zipPath = $backupDir . '/' . $filename;
-
-            // Generar volcado SQL
-            $sqlContent = "-- Copia de seguridad del Sistema de Inventario\n";
-            $sqlContent .= "-- Fecha de generación: " . date('Y-m-d H:i:s') . "\n";
-            $sqlContent .= "-- Creado por: " . Auth::user()->name . "\n";
-            $sqlContent .= "SET FOREIGN_KEY_CHECKS = 0;\n\n";
-
-            // Obtener listado de tablas
-            $tables = DB::select('SHOW TABLES');
-            $dbNameKey = 'Tables_in_' . env('DB_DATABASE');
-
-            foreach ($tables as $table) {
-                $tableName = $table->$dbNameKey;
-
-                // Estructura de la tabla
-                $sqlContent .= "-- -----------------------------------------------------\n";
-                $sqlContent .= "-- Estructura de tabla para la tabla `$tableName`\n";
-                $sqlContent .= "-- -----------------------------------------------------\n";
-                $sqlContent .= "DROP TABLE IF EXISTS `$tableName`;\n";
-                
-                $showCreate = DB::select("SHOW CREATE TABLE `$tableName`")[0];
-                $createTableKey = 'Create Table';
-                $sqlContent .= $showCreate->$createTableKey . ";\n\n";
-
-                // Datos de la tabla
-                $rows = DB::table($tableName)->get();
-                if ($rows->count() > 0) {
-                    $sqlContent .= "-- Datos para la tabla `$tableName`\n";
-                    foreach ($rows as $row) {
-                        $rowArray = (array) $row;
-                        $keys = array_keys($rowArray);
-                        $escapedValues = array_map(function ($value) {
-                            if (is_null($value)) {
-                                return 'NULL';
-                            }
-                            // Escapar comillas y caracteres especiales
-                            return "'" . str_replace(["\\", "'", "\r", "\n"], ["\\\\", "\\'", "\\r", "\\n"], $value) . "'";
-                        }, array_values($rowArray));
-
-                        $sqlContent .= "INSERT INTO `$tableName` (`" . implode("`, `", $keys) . "`) VALUES (" . implode(", ", $escapedValues) . ");\n";
-                    }
-                    $sqlContent .= "\n";
-                }
-            }
-
-            $sqlContent .= "SET FOREIGN_KEY_CHECKS = 1;\n";
-
-            // Crear el archivo ZIP y empaquetar SQL + Directorio public storage
-            $zip = new \ZipArchive();
-            if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
-                // Agregar base de datos SQL
-                $zip->addFromString('database.sql', $sqlContent);
-
-                // Agregar archivos de storage/app/public de forma recursiva
-                $storageDir = storage_path('app/public');
-                if (File::exists($storageDir)) {
-                    $files = new \RecursiveIteratorIterator(
-                        new \RecursiveDirectoryIterator($storageDir),
-                        \RecursiveIteratorIterator::LEAVES_ONLY
-                    );
-
-                    foreach ($files as $name => $file) {
-                        if (!$file->isDir()) {
-                            $filePath = $file->getRealPath();
-                            $relativePath = 'storage/' . substr($filePath, strlen($storageDir) + 1);
-                            $relativePath = str_replace('\\', '/', $relativePath); // Normalizar barras diagonales
-                            $zip->addFile($filePath, $relativePath);
-                        }
-                    }
-                }
-
-                $zip->close();
-            } else {
-                throw new \Exception("No se pudo iniciar la creación del archivo ZIP.");
-            }
-
-            AuditoriaLog::registrar(
-                'CREACION_RESPALDO',
-                "El Administrador " . Auth::user()->name . " generó una copia de seguridad ZIP completa: {$filename}."
-            );
-
+            $res = $this->generarRespaldoInterno(Auth::user()->name);
             return response()->json([
                 'success' => true,
                 'message' => 'Copia de seguridad ZIP creada correctamente.',
-                'filename' => $filename
+                'filename' => $res['filename']
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -330,8 +343,37 @@ class BackupController extends Controller
         $bytes = max($bytes, 0);
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
         $pow = min($pow, count($units) - 1);
-        $bytes /= pow(1024, $pow);
-
         return round($bytes, $precision) . ' ' . $units[$pow];
+    }
+
+    public function saveSettings(Request $request)
+    {
+        if (!Auth::user()->esAdmin()) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        try {
+            \App\Models\Configuracion::guardar('backup_auto_habilitado', $request->input('habilitado', '0'));
+            \App\Models\Configuracion::guardar('backup_auto_hora', $request->input('hora', '23:00'));
+            \App\Models\Configuracion::guardar('backup_auto_frecuencia', $request->input('frecuencia', 'diario'));
+            \App\Models\Configuracion::guardar('backup_auto_dia_semana', $request->input('dia_semana', '1'));
+            \App\Models\Configuracion::guardar('backup_auto_dia_mes', $request->input('dia_mes', 'ultimo'));
+            \App\Models\Configuracion::guardar('backup_auto_fecha_unica', $request->input('fecha_unica', ''));
+
+            AuditoriaLog::registrar(
+                'CONFIGURACION_RESPALDOS',
+                "El Administrador " . Auth::user()->name . " actualizó las configuraciones de copias de seguridad automáticas."
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Configuraciones de copias de seguridad guardadas correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al guardar configuraciones: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

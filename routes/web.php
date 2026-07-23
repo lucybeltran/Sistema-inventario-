@@ -89,6 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/backups/eliminar/{filename}', [BackupController::class, 'destroy'])->name('backups.destroy');
         Route::post('/backups/restaurar/{filename}', [BackupController::class, 'restore'])->name('backups.restore');
         Route::post('/backups/subir-restaurar', [BackupController::class, 'uploadRestore'])->name('backups.uploadRestore');
+        Route::post('/backups/configurar', [BackupController::class, 'saveSettings'])->name('backups.saveSettings');
     });
 
     // ===== ADMIN Y REPORTES PUEDEN VER/DESCARGAR REPORTES =====

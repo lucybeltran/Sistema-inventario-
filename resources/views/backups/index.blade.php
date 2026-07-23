@@ -254,13 +254,101 @@
         </div>
     </div>
 
-    {{-- BANNER DE ADVERTENCIA / INFORMACIÓN --}}
-    <div class="alert-banner" style="border-left-color: var(--primary);">
-        <i class="fas fa-shield-alt" style="color: var(--primary);"></i>
+    {{-- ADVERTENCIA / RECOMENDACIÓN DE DESCARGA MENSUAL --}}
+    <div class="alert-banner" style="border-left-color: #eab308; background: rgba(234, 179, 8, 0.05); border-color: rgba(234, 179, 8, 0.2); display: flex; align-items: flex-start; gap: 12px; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+        <i class="fas fa-exclamation-triangle" style="color: #eab308; font-size: 20px; margin-top: 2px;"></i>
         <div>
-            <strong>Respaldos Completos en formato ZIP</strong><br>
-            Cada respaldo generado ahora empaqueta automáticamente **toda la base de datos SQL** junto con **todas las fotos de los artículos e imágenes de perfil (Storage)**. Puedes subir este archivo en otra computadora para duplicar el sistema completo al instante.
+            <strong style="color: #a16207; font-size: 13.5px;">💡 Recomendación importante de Seguridad:</strong>
+            <p style="margin: 4px 0 0; font-size: 12.5px; color: #854d0e; line-height: 1.5;">
+                Para evitar la pérdida total de datos por fallas de hardware en este equipo, te sugerimos 
+                <strong>descargar el archivo ZIP de tus respaldos al menos una vez al mes</strong> y guardarlo en un disco externo, pendrive o en la nube. Así tendrás tu información y fotos a salvo.
+            </p>
         </div>
+    </div>
+
+    {{-- CARD DE CONFIGURACIÓN AUTOMÁTICA --}}
+    <div style="background: var(--bg-card, #fff); border: 1.5px solid var(--border); border-radius: 16px; padding: 22px; margin-bottom: 25px; box-shadow: var(--shadow);">
+        <h3 style="margin: 0 0 14px 0; font-size: 16px; color: var(--text-primary); font-weight: 700; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-clock" style="color: var(--primary);"></i> Programación de Respaldos Automáticos
+        </h3>
+        
+        <form id="form-config-backup" style="display: flex; flex-direction: column; gap: 20px;">
+            
+            {{-- Primera fila: Habilitar y Hora --}}
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
+                {{-- Checkbox Habilitar --}}
+                <div style="flex: 1; min-width: 250px;">
+                    <label style="display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 600; color: var(--text-primary); cursor: pointer;">
+                        <input type="checkbox" id="backup_auto_habilitado" name="habilitado" value="1" {{ ($config['habilitado'] ?? '0') === '1' ? 'checked' : '' }} style="width: 17px; height: 17px; accent-color: var(--primary); cursor: pointer;">
+                        Activar copias de seguridad automáticas
+                    </label>
+                    <p style="margin: 6px 0 0 27px; font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                        El servidor generará un respaldo completo del sistema de forma automática en segundo plano.
+                    </p>
+                </div>
+
+                {{-- Hora de ejecución --}}
+                <div style="width: 180px;">
+                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Hora del Respaldo</label>
+                    <input type="time" id="backup_auto_hora" name="hora" value="{{ $config['hora'] ?? '23:00' }}" style="width: 100%; height: 38px; padding: 0 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 13.5px;">
+                </div>
+            </div>
+
+            {{-- Segunda fila: Frecuencia y Detalles Dinámicos --}}
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; border-top: 1px dashed var(--border); padding-top: 15px;">
+                
+                {{-- Frecuencia Select --}}
+                <div style="width: 250px;">
+                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Frecuencia del Respaldo</label>
+                    <select id="backup_auto_frecuencia" name="frecuencia" onchange="mostrarOpcionesFrecuencia(this.value)" style="width: 100%; height: 38px; padding: 0 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 13.5px; cursor: pointer; font-weight: 600;">
+                        <option value="diario" {{ ($config['frecuencia'] ?? 'diario') === 'diario' ? 'selected' : '' }}>Diario (Todos los días)</option>
+                        <option value="semanal" {{ ($config['frecuencia'] ?? '') === 'semanal' ? 'selected' : '' }}>Semanal (Un día de la semana)</option>
+                        <option value="mensual" {{ ($config['frecuencia'] ?? '') === 'mensual' ? 'selected' : '' }}>Mensual (Un día del mes)</option>
+                        <option value="fecha_unica" {{ ($config['frecuencia'] ?? '') === 'fecha_unica' ? 'selected' : '' }}>Fecha Única (Una sola vez)</option>
+                    </select>
+                </div>
+
+                {{-- Detalles Dinámicos: Semanal --}}
+                <div id="wrapper-dia-semana" style="width: 250px; display: none;">
+                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Día de la Semana</label>
+                    <select id="backup_auto_dia_semana" name="dia_semana" style="width: 100%; height: 38px; padding: 0 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 13.5px; cursor: pointer;">
+                        <option value="1" {{ ($config['dia_semana'] ?? '1') == '1' ? 'selected' : '' }}>Lunes</option>
+                        <option value="2" {{ ($config['dia_semana'] ?? '1') == '2' ? 'selected' : '' }}>Martes</option>
+                        <option value="3" {{ ($config['dia_semana'] ?? '1') == '3' ? 'selected' : '' }}>Miércoles</option>
+                        <option value="4" {{ ($config['dia_semana'] ?? '1') == '4' ? 'selected' : '' }}>Jueves</option>
+                        <option value="5" {{ ($config['dia_semana'] ?? '1') == '5' ? 'selected' : '' }}>Viernes</option>
+                        <option value="6" {{ ($config['dia_semana'] ?? '1') == '6' ? 'selected' : '' }}>Sábado</option>
+                        <option value="7" {{ ($config['dia_semana'] ?? '1') == '7' ? 'selected' : '' }}>Domingo</option>
+                    </select>
+                </div>
+
+                {{-- Detalles Dinámicos: Mensual --}}
+                <div id="wrapper-dia-mes" style="width: 250px; display: none;">
+                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Día del Mes</label>
+                    <select id="backup_auto_dia_mes" name="dia_mes" style="width: 100%; height: 38px; padding: 0 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 13.5px; cursor: pointer;">
+                        <option value="ultimo" {{ ($config['dia_mes'] ?? 'ultimo') === 'ultimo' ? 'selected' : '' }}>Último día del mes (Recomendado)</option>
+                        @for ($i = 1; $i <= 28; $i++)
+                            <option value="{{ $i }}" {{ ($config['dia_mes'] ?? '') == $i ? 'selected' : '' }}>Día {{ $i }}</option>
+                        @endfor
+                    </select>
+                </div>
+
+                {{-- Detalles Dinámicos: Fecha Única --}}
+                <div id="wrapper-fecha-unica" style="width: 250px; display: none;">
+                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">Fecha Exacta</label>
+                    <input type="date" id="backup_auto_fecha_unica" name="fecha_unica" value="{{ $config['fecha_unica'] ?? '' }}" style="width: 100%; height: 38px; padding: 0 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 13.5px;">
+                </div>
+
+                {{-- Botón Guardar --}}
+                <div style="margin-left: auto;">
+                    <button type="button" onclick="guardarConfiguracionBackup()" style="background: var(--primary); color: white; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; height: 38px; transition: all 0.2s;" onmouseover="this.style.opacity='0.9';" onmouseout="this.style.opacity='1';">
+                        <i class="fas fa-save"></i> Guardar Programación
+                    </button>
+                </div>
+
+            </div>
+
+        </form>
     </div>
 
     {{-- LISTADO DE RESPALDOS --}}
@@ -277,7 +365,7 @@
                         <th>Archivo</th>
                         <th>Fecha de Creación</th>
                         <th>Tamaño</th>
-                        <th style="text-align: right; width: 320px;">Acciones</th>
+                        <th style="text-align: right; width: 220px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -303,9 +391,6 @@
                                     <a href="{{ route('backups.download', $b['filename']) }}" class="backup-btn-action download" title="Descargar archivo en local">
                                         <i class="fas fa-download"></i> Descargar
                                     </a>
-                                    <button type="button" class="backup-btn-action restore" onclick="confirmarRestauracion('{{ $b['filename'] }}')" title="Restaurar el sistema a este punto">
-                                        <i class="fas fa-undo-alt"></i> Restaurar
-                                    </button>
                                     <button type="button" class="backup-btn-action delete" onclick="confirmarEliminacion('{{ $b['filename'] }}')" title="Eliminar este archivo de respaldo">
                                         <i class="fas fa-trash-alt"></i> Eliminar
                                     </button>
@@ -625,6 +710,84 @@
             } else {
                 input.value = '';
             }
+        });
+    }
+    function mostrarOpcionesFrecuencia(frecuencia) {
+        document.getElementById('wrapper-dia-semana').style.display = (frecuencia === 'semanal') ? 'block' : 'none';
+        document.getElementById('wrapper-dia-mes').style.display = (frecuencia === 'mensual') ? 'block' : 'none';
+        document.getElementById('wrapper-fecha-unica').style.display = (frecuencia === 'fecha_unica') ? 'block' : 'none';
+    }
+
+    // Inicializar visualización de campos al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectFrecuencia = document.getElementById('backup_auto_frecuencia');
+        if (selectFrecuencia) {
+            mostrarOpcionesFrecuencia(selectFrecuencia.value);
+        }
+    });
+
+    // Guardar configuración de respaldo automático programado
+    function guardarConfiguracionBackup() {
+        const habilitado = document.getElementById('backup_auto_habilitado').checked ? '1' : '0';
+        const hora = document.getElementById('backup_auto_hora').value;
+        const frecuencia = document.getElementById('backup_auto_frecuencia').value;
+        const dia_semana = document.getElementById('backup_auto_dia_semana').value;
+        const dia_mes = document.getElementById('backup_auto_dia_mes').value;
+        const fecha_unica = document.getElementById('backup_auto_fecha_unica').value;
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+        showLoader('Guardando Configuración', 'Actualizando base de datos de configuraciones...');
+
+        fetch("{{ route('backups.saveSettings') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                habilitado: habilitado,
+                hora: hora,
+                frecuencia: frecuencia,
+                dia_semana: dia_semana,
+                dia_mes: dia_mes,
+                fecha_unica: fecha_unica
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            hideLoader();
+            if (data.success) {
+                Swal.fire({
+                    title: '¡Configuración Guardada!',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonColor: '#10b981',
+                    background: isDark ? '#1e293b' : '#ffffff',
+                    color: isDark ? '#f1f5f9' : '#1e293b',
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: data.error || 'Ocurrió un error al guardar la configuración.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444',
+                    background: isDark ? '#1e293b' : '#ffffff',
+                    color: isDark ? '#f1f5f9' : '#1e293b',
+                });
+            }
+        })
+        .catch(err => {
+            hideLoader();
+            console.error(err);
+            Swal.fire({
+                title: 'Error de comunicación',
+                text: 'No se pudo comunicar con el servidor para guardar las configuraciones.',
+                icon: 'error',
+                confirmButtonColor: '#ef4444',
+                background: isDark ? '#1e293b' : '#ffffff',
+                color: isDark ? '#f1f5f9' : '#1e293b',
+            });
         });
     }
 </script>
