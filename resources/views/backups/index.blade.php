@@ -243,21 +243,30 @@
         gap: 8px;
     }
 
-    .backup-schedule-grid-top {
+    .backup-schedule-grid {
         display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 20px;
-        align-items: center;
-        padding-bottom: 16px;
+        grid-template-columns: 1.2fr 1.2fr 1.5fr;
+        gap: 25px;
+        align-items: stretch;
     }
-
-    .backup-schedule-grid-bottom {
-        display: grid;
-        grid-template-columns: 250px 250px 1fr auto;
-        gap: 20px;
-        align-items: flex-end;
-        border-top: 1.5px dashed var(--border);
-        padding-top: 18px;
+    
+    @media (max-width: 900px) {
+        .backup-schedule-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .backup-schedule-col {
+            border-right: none !important;
+            padding-right: 0 !important;
+            border-bottom: 1.5px dashed var(--border);
+            padding-bottom: 20px;
+        }
+        
+        .backup-schedule-col:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
     }
 
     .backup-form-group {
@@ -370,63 +379,84 @@
         </div>
     </div>
 
-    {{-- CARD DE CONFIGURACIÓN AUTOMÁTICA --}}
+    {{-- CARD DE CONFIGURACIÓN AUTOMÁTICA PREMIUM --}}
     <div class="backup-schedule-card">
-        <h3>
-            <i class="fas fa-clock" style="color:#d97706;"></i> Programación de Respaldos Automáticos
+        <h3 style="margin: 0 0 20px 0; font-size: 16px; color: var(--text-primary); font-weight: 800; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+            <i class="fas fa-clock" style="color: #d97706; font-size: 18px;"></i> Programación de Respaldos Automáticos
         </h3>
         
-        <form id="form-config-backup" style="margin:0;">
-            {{-- Fila superior --}}
-            <div class="backup-schedule-grid-top">
-                {{-- Checkbox Habilitar --}}
-                <div>
-                    <label style="display:flex; align-items:center; gap:10px; font-size:14px; font-weight:700; color:var(--text-primary); cursor:pointer;">
-                        <input type="checkbox" id="backup_auto_habilitado" name="habilitado" value="1" {{ ($config['habilitado'] ?? '0') === '1' ? 'checked' : '' }} style="width:18px; height:18px; accent-color:#d97706; cursor:pointer;">
-                        Activar copias de seguridad automáticas
+        <form id="form-config-backup" style="margin: 0;">
+            <div class="backup-schedule-grid">
+                
+                {{-- Columna 1: Interruptor y Estado General --}}
+                <div class="backup-schedule-col" style="border-right: 1.5px solid var(--border); padding-right: 20px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                        <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(217, 119, 6, 0.08); display: flex; align-items: center; justify-content: center; color: #d97706; font-size: 16px; flex-shrink: 0;">
+                            <i class="fas fa-power-off"></i>
+                        </div>
+                        <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: var(--text-primary);">Estado del Servicio</h4>
+                    </div>
+                    
+                    <label style="display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 700; color: var(--text-primary); cursor: pointer; margin-bottom: 10px;">
+                        <input type="checkbox" id="backup_auto_habilitado" name="habilitado" value="1" {{ ($config['habilitado'] ?? '0') === '1' ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #d97706; cursor: pointer;">
+                        Activar respaldos automáticos
                     </label>
-                    <p style="margin:4px 0 0 28px; font-size:12.5px; color:var(--text-muted); line-height:1.4;">
-                        El servidor generará un respaldo completo del sistema (Base de datos y fotos del storage) de forma automática.
+                    <p style="margin: 0 0 0 28px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+                        Cuando está activo, el servidor ejecutará y guardará copias de seguridad de la base de datos e imágenes en segundo plano.
                     </p>
                 </div>
 
-                {{-- Hora de ejecución --}}
-                <div class="backup-form-group">
-                    <label>Hora del Respaldo</label>
-                    <input type="time" id="backup_auto_hora" name="hora" class="backup-input" value="{{ $config['hora'] ?? '23:00' }}" style="width:160px;">
-                </div>
-            </div>
+                {{-- Columna 2: Frecuencia y Hora --}}
+                <div class="backup-schedule-col" style="border-right: 1.5px solid var(--border); padding-right: 20px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                        <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(217, 119, 6, 0.08); display: flex; align-items: center; justify-content: center; color: #d97706; font-size: 16px; flex-shrink: 0;">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: var(--text-primary);">Configurar Cronograma</h4>
+                    </div>
 
-            {{-- Fila inferior --}}
-            <div class="backup-schedule-grid-bottom">
-                
-                {{-- Frecuencia Select --}}
-                <div class="backup-form-group">
-                    <label>Frecuencia del Respaldo</label>
-                    <select id="backup_auto_frecuencia" name="frecuencia" class="backup-input" onchange="mostrarOpcionesFrecuencia(this.value)">
-                        <option value="ultimo_dia_mes" {{ ($config['frecuencia'] ?? 'ultimo_dia_mes') === 'ultimo_dia_mes' ? 'selected' : '' }}>Mensual (Último día de cada mes)</option>
-                        <option value="fecha_unica" {{ ($config['frecuencia'] ?? '') === 'fecha_unica' ? 'selected' : '' }}>Fecha Exacta (Una sola vez)</option>
-                    </select>
+                    <div style="display: flex; flex-direction: column; gap: 14px;">
+                        <div class="backup-form-group">
+                            <label>Frecuencia de Ejecución</label>
+                            <select id="backup_auto_frecuencia" name="frecuencia" class="backup-input" onchange="mostrarOpcionesFrecuencia(this.value)">
+                                <option value="ultimo_dia_mes" {{ ($config['frecuencia'] ?? 'ultimo_dia_mes') === 'ultimo_dia_mes' ? 'selected' : '' }}>Mensual (Último día del mes)</option>
+                                <option value="fecha_unica" {{ ($config['frecuencia'] ?? '') === 'fecha_unica' ? 'selected' : '' }}>Fecha Exacta (Una sola vez)</option>
+                            </select>
+                        </div>
+
+                        {{-- Inputs ocultos de retrocompatibilidad --}}
+                        <input type="hidden" id="backup_auto_dia_semana" value="1">
+                        <input type="hidden" id="backup_auto_dia_mes" value="ultimo">
+
+                        <div class="backup-form-group">
+                            <label>Hora del Respaldo</label>
+                            <input type="time" id="backup_auto_hora" name="hora" class="backup-input" value="{{ $config['hora'] ?? '23:00' }}">
+                        </div>
+
+                        {{-- Detalles Dinámicos: Fecha Única --}}
+                        <div id="wrapper-fecha-unica" class="backup-form-group" style="display:none;">
+                            <label>Fecha de Ejecución</label>
+                            <input type="date" id="backup_auto_fecha_unica" name="fecha_unica" class="backup-input" value="{{ $config['fecha_unica'] ?? '' }}">
+                        </div>
+                    </div>
                 </div>
 
-                {{-- Oculto para fecha de semana/mes (no requerido) pero mantenemos inputs ocultos/vacíos para retrocompatibilidad JS --}}
-                <input type="hidden" id="backup_auto_dia_semana" value="1">
-                <input type="hidden" id="backup_auto_dia_mes" value="ultimo">
+                {{-- Columna 3: Próxima Ejecución y Confirmación --}}
+                <div class="backup-schedule-col" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 180px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(217, 119, 6, 0.08); display: flex; align-items: center; justify-content: center; color: #d97706; font-size: 16px; flex-shrink: 0;">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+                        <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: var(--text-primary);">Próxima Ejecución</h4>
+                    </div>
 
-                {{-- Detalles Dinámicos: Fecha Única --}}
-                <div id="wrapper-fecha-unica" class="backup-form-group" style="display:none;">
-                    <label>Fecha de Ejecución</label>
-                    <input type="date" id="backup_auto_fecha_unica" name="fecha_unica" class="backup-input" value="{{ $config['fecha_unica'] ?? '' }}">
-                </div>
-                
-                {{-- Info de ejecución calculado --}}
-                <div id="info-proximo-backup" style="font-size: 13.5px; font-weight: 700; min-height: 42px; display: flex; align-items: center; padding-left: 10px;">
-                    <!-- Se calculará dinámicamente con JS -->
-                </div>
+                    {{-- Card/Badge del próximo respaldo --}}
+                    <div id="info-proximo-backup" style="flex-grow: 1; margin-bottom: 15px; border-radius: 12px; padding: 14px; display: flex; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; transition: all 0.3s ease; border: 1.5px dashed var(--border); background: var(--bg-main);">
+                        <!-- Se calcula dinámicamente con JS -->
+                    </div>
 
-                {{-- Botón Guardar --}}
-                <div>
-                    <button type="button" onclick="guardarConfiguracionBackup()" class="btn-save-schedule">
+                    {{-- Botón Guardar --}}
+                    <button type="button" onclick="guardarConfiguracionBackup()" class="btn-save-schedule" style="width: 100%; justify-content: center; height: 42px; font-size: 14px;">
                         <i class="fas fa-save"></i> Guardar Programación
                     </button>
                 </div>
