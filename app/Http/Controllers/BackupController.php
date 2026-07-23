@@ -55,8 +55,9 @@ class BackupController extends Controller
                 File::makeDirectory($backupDir, 0755, true);
             }
 
-            $filename = 'backup-' . date('Y-m-d_H-i-s') . '.sql';
-            $filePath = $backupDir . '/' . $filename;
+            // Generar archivo ZIP que contendrá base de datos y archivos de storage
+            $filename = 'backup-' . date('Y-m-d_H-i-s') . '.zip';
+            $zipPath = $backupDir . '/' . $filename;
 
             // Generar volcado SQL
             $sqlContent = "-- Copia de seguridad del Sistema de Inventario\n";
@@ -104,17 +105,43 @@ class BackupController extends Controller
 
             $sqlContent .= "SET FOREIGN_KEY_CHECKS = 1;\n";
 
-            // Guardar archivo SQL
-            File::put($filePath, $sqlContent);
+            // Crear el archivo ZIP y empaquetar SQL + Directorio public storage
+            $zip = new \ZipArchive();
+            if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+                // Agregar base de datos SQL
+                $zip->addFromString('database.sql', $sqlContent);
+
+                // Agregar archivos de storage/app/public de forma recursiva
+                $storageDir = storage_path('app/public');
+                if (File::exists($storageDir)) {
+                    $files = new \RecursiveIteratorIterator(
+                        new \RecursiveDirectoryIterator($storageDir),
+                        \RecursiveIteratorIterator::LEAVES_ONLY
+                    );
+
+                    foreach ($files as $name => $file) {
+                        if (!$file->isDir()) {
+                            $filePath = $file->getRealPath();
+                            $relativePath = 'storage/' . substr($filePath, strlen($storageDir) + 1);
+                            $relativePath = str_replace('\\', '/', $relativePath); // Normalizar barras diagonales
+                            $zip->addFile($filePath, $relativePath);
+                        }
+                    }
+                }
+
+                $zip->close();
+            } else {
+                throw new \Exception("No se pudo iniciar la creación del archivo ZIP.");
+            }
 
             AuditoriaLog::registrar(
                 'CREACION_RESPALDO',
-                "El Administrador " . Auth::user()->name . " generó una copia de seguridad: {$filename}."
+                "El Administrador " . Auth::user()->name . " generó una copia de seguridad ZIP completa: {$filename}."
             );
 
             return response()->json([
                 'success' => true,
-                'message' => 'Copia de seguridad creada correctamente.',
+                'message' => 'Copia de seguridad ZIP creada correctamente.',
                 'filename' => $filename
             ]);
 
@@ -179,15 +206,50 @@ class BackupController extends Controller
         }
 
         try {
-            $sql = File::get($filePath);
+            // Verificar extensión de archivo
+            if (File::extension($filePath) === 'zip') {
+                $tempExtractDir = storage_path('app/temp_restore_' . time());
+                if (!File::exists($tempExtractDir)) {
+                    File::makeDirectory($tempExtractDir, 0755, true);
+                }
 
-            // Ejecución segura deshabilitando llaves foráneas temporalmente
-            DB::connection()->getPdo()->exec("SET FOREIGN_KEY_CHECKS = 0;");
-            
-            // Laravel DB::unprepared nos permite correr el script SQL entero en una sola llamada PDO
-            DB::unprepared($sql);
+                // Extraer ZIP
+                $zip = new \ZipArchive();
+                if ($zip->open($filePath) === true) {
+                    $zip->extractTo($tempExtractDir);
+                    $zip->close();
+                } else {
+                    throw new \Exception("No se pudo abrir el archivo ZIP de respaldo.");
+                }
 
-            DB::connection()->getPdo()->exec("SET FOREIGN_KEY_CHECKS = 1;");
+                $sqlPath = $tempExtractDir . '/database.sql';
+                if (!File::exists($sqlPath)) {
+                    File::deleteDirectory($tempExtractDir);
+                    throw new \Exception("El respaldo ZIP no contiene el archivo de base de datos 'database.sql'.");
+                }
+
+                // Restaurar base de datos
+                $sql = File::get($sqlPath);
+                DB::connection()->getPdo()->exec("SET FOREIGN_KEY_CHECKS = 0;");
+                DB::unprepared($sql);
+                DB::connection()->getPdo()->exec("SET FOREIGN_KEY_CHECKS = 1;");
+
+                // Restaurar storage (copiar directorio recursivamente e integrar imágenes sin duplicados)
+                $zipStorageDir = $tempExtractDir . '/storage';
+                if (File::exists($zipStorageDir)) {
+                    $targetStorageDir = storage_path('app/public');
+                    File::copyDirectory($zipStorageDir, $targetStorageDir);
+                }
+
+                // Limpiar directorio temporal
+                File::deleteDirectory($tempExtractDir);
+            } else {
+                // Restauración clásica de archivo .sql solo
+                $sql = File::get($filePath);
+                DB::connection()->getPdo()->exec("SET FOREIGN_KEY_CHECKS = 0;");
+                DB::unprepared($sql);
+                DB::connection()->getPdo()->exec("SET FOREIGN_KEY_CHECKS = 1;");
+            }
 
             AuditoriaLog::registrar(
                 'RESTAURACION_BASE_DATOS',
@@ -196,14 +258,68 @@ class BackupController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Base de datos restaurada correctamente a partir de ' . $filename
+                'message' => 'Respaldo restaurado correctamente.'
             ]);
 
         } catch (\Exception $e) {
             DB::connection()->getPdo()->exec("SET FOREIGN_KEY_CHECKS = 1;");
             return response()->json([
                 'success' => false,
-                'error' => 'Error al restaurar la base de datos: ' . $e->getMessage()
+                'error' => 'Error al restaurar el respaldo: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function uploadRestore(Request $request)
+    {
+        if (!Auth::user()->esAdmin()) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $request->validate([
+            'backup_file' => 'required|file|max:102400', // Máx 100MB
+        ]);
+
+        try {
+            $file = $request->file('backup_file');
+            $originalExtension = strtolower($file->getClientOriginalExtension());
+
+            if (!in_array($originalExtension, ['zip', 'sql'])) {
+                return response()->json(['success' => false, 'error' => 'Solo se permiten archivos .zip o .sql.'], 400);
+            }
+
+            $filename = 'uploaded-backup-' . time() . '.' . $originalExtension;
+            
+            $backupDir = storage_path('app/backups');
+            if (!File::exists($backupDir)) {
+                File::makeDirectory($backupDir, 0755, true);
+            }
+            
+            $file->move($backupDir, $filename);
+            
+            // Llamar al método restore para procesar la instalación
+            $response = $this->restore($filename);
+            $responseData = json_decode($response->getContent(), true);
+
+            // Eliminar el archivo subido de forma temporal
+            $filePath = $backupDir . '/' . $filename;
+            if (File::exists($filePath)) {
+                File::delete($filePath);
+            }
+
+            if (isset($responseData['success']) && $responseData['success'] === true) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Respaldo subido y restaurado con éxito.'
+                ]);
+            } else {
+                throw new \Exception($responseData['error'] ?? 'Error desconocido al aplicar el respaldo.');
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al subir y restaurar: ' . $e->getMessage()
             ], 500);
         }
     }

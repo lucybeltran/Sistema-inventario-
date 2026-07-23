@@ -229,34 +229,38 @@
 @section('contenido')
 <div class="backup-container">
 
-    {{-- HEADER --}}
-    <div class="page-header">
-        <h2 class="page-title">
-            <i class="fas fa-database"></i> Copia de Seguridad
-        </h2>
-        <span class="page-counter">
-            {{ count($backups) }} respaldos guardados
-        </span>
+    {{-- HEADER CON BOTONES PRINCIPALES DE ACCIÓN --}}
+    <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:25px; border-bottom:1px solid var(--border); padding-bottom:18px;">
+        <div>
+            <h2 class="page-title" style="margin:0 0 4px 0; font-size:22px; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-database" style="color:var(--primary);"></i> Copias de Seguridad (Backups)
+            </h2>
+            <p class="page-subtitle" style="margin:0; font-size:13.5px; color:var(--text-secondary);">
+                Gestión integral de respaldos ZIP, imágenes de storage y restauración inteligente sin duplicados
+            </p>
+        </div>
+        
+        <div style="display:flex; align-items:center; gap:12px;">
+            <!-- Input oculto para carga de archivos de respaldo -->
+            <input type="file" id="backup-file-input" style="display:none;" onchange="subirRestaurarZip(this)" accept=".zip,.sql">
+            
+            <button type="button" class="btn-create-backup" onclick="document.getElementById('backup-file-input').click()" style="background:#1e293b; color:#cbd5e1; border:1px solid #334155; padding:10px 20px; border-radius:10px; font-weight:700; font-size:13.5px; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all 0.25s ease;" onmouseover="this.style.background='#334155'; this.style.color='#f1f5f9';" onmouseout="this.style.background='#1e293b'; this.style.color='#cbd5e1';">
+                <i class="fas fa-cloud-upload-alt" style="color:#eab308; font-size:15px;"></i> Subir & Restaurar ZIP
+            </button>
+            
+            <button type="button" class="btn-create-backup" id="btnGenerarBackup" onclick="generarBackup()" style="background:linear-gradient(135deg, #d97706 0%, #f59e0b 100%); color:white; border:none; padding:10px 22px; border-radius:10px; font-weight:700; font-size:13.5px; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all 0.25s ease; box-shadow:0 4px 12px rgba(217, 119, 6, 0.2);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 18px rgba(217, 119, 6, 0.35)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 12px rgba(217, 119, 6, 0.2)';">
+                <i class="fas fa-cloud-download-alt"></i> Generar Respaldo Ahora
+            </button>
+        </div>
     </div>
 
-    {{-- BANNER DE INFORMACIÓN DE RESPALDOS --}}
+    {{-- BANNER DE ADVERTENCIA / INFORMACIÓN --}}
     <div class="alert-banner" style="border-left-color: var(--primary);">
         <i class="fas fa-shield-alt" style="color: var(--primary);"></i>
         <div>
-            <strong>Copias de Seguridad del Sistema</strong><br>
-            Puedes generar y descargar archivos SQL con todo el contenido actual del inventario, usuarios y movimientos para almacenamiento seguro externo.
+            <strong>Respaldos Completos en formato ZIP</strong><br>
+            Cada respaldo generado ahora empaqueta automáticamente **toda la base de datos SQL** junto con **todas las fotos de los artículos e imágenes de perfil (Storage)**. Puedes subir este archivo en otra computadora para duplicar el sistema completo al instante.
         </div>
-    </div>
-
-    {{-- CARD DE ACCIÓN PRINCIPAL --}}
-    <div class="action-card">
-        <div class="action-info">
-            <h3>Generar Copia de Seguridad</h3>
-            <p>Genera un volcado completo de la estructura y todos los datos del sistema en un archivo estructurado SQL.</p>
-        </div>
-        <button type="button" class="btn-create-backup" id="btnGenerarBackup" onclick="generarBackup()">
-            <i class="fas fa-cloud-download-alt"></i> Crear Respaldo Ahora
-        </button>
     </div>
 
     {{-- LISTADO DE RESPALDOS --}}
@@ -273,14 +277,18 @@
                         <th>Archivo</th>
                         <th>Fecha de Creación</th>
                         <th>Tamaño</th>
-                        <th style="text-align: right; width: 220px;">Acciones</th>
+                        <th style="text-align: right; width: 320px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($backups as $b)
                         <tr>
                             <td>
-                                <span class="badge-sql"><i class="fas fa-file-code"></i> SQL</span>
+                                @if(Str::endsWith($b['filename'], '.zip'))
+                                    <span class="badge-sql" style="background: rgba(249, 115, 22, 0.08); color: #f97316; border-color: rgba(249, 115, 22, 0.2);"><i class="fas fa-file-archive"></i> ZIP</span>
+                                @else
+                                    <span class="badge-sql"><i class="fas fa-file-code"></i> SQL</span>
+                                @endif
                                 <strong style="margin-left: 6px; font-size: 13.5px; color: var(--text-primary);">{{ $b['filename'] }}</strong>
                             </td>
                             <td style="color: var(--text-secondary);">
@@ -295,6 +303,9 @@
                                     <a href="{{ route('backups.download', $b['filename']) }}" class="backup-btn-action download" title="Descargar archivo en local">
                                         <i class="fas fa-download"></i> Descargar
                                     </a>
+                                    <button type="button" class="backup-btn-action restore" onclick="confirmarRestauracion('{{ $b['filename'] }}')" title="Restaurar el sistema a este punto">
+                                        <i class="fas fa-undo-alt"></i> Restaurar
+                                    </button>
                                     <button type="button" class="backup-btn-action delete" onclick="confirmarEliminacion('{{ $b['filename'] }}')" title="Eliminar este archivo de respaldo">
                                         <i class="fas fa-trash-alt"></i> Eliminar
                                     </button>
@@ -527,6 +538,92 @@
                         color: isDark ? '#f1f5f9' : '#1e293b',
                     });
                 });
+            }
+        });
+    }
+
+    // Subir y restaurar archivo ZIP/SQL
+    function subirRestaurarZip(input) {
+        if (!input.files || input.files.length === 0) return;
+
+        const file = input.files[0];
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+        Swal.fire({
+            title: '⚠️ ADVERTENCIA CRÍTICA ⚠️',
+            html: `¿Estás seguro de que deseas subir e importar el archivo de respaldo <strong>${file.name}</strong>?<br><br>Se sobrescribirá toda la base de datos actual y se integrarán las imágenes del sistema.<br><br>Escribe <strong>RESTAURAR</strong> abajo para confirmar:`,
+            icon: 'warning',
+            input: 'text',
+            inputPlaceholder: 'Escribe RESTAURAR aquí...',
+            showCancelButton: true,
+            confirmButtonColor: '#d97706',
+            cancelButtonColor: '#475569',
+            confirmButtonText: 'Subir e Importar Respaldo',
+            cancelButtonText: 'Cancelar',
+            background: isDark ? '#1e293b' : '#ffffff',
+            color: isDark ? '#f1f5f9' : '#1e293b',
+            inputValidator: (value) => {
+                if (value !== 'RESTAURAR') {
+                    return 'Debes escribir la palabra exacta RESTAURAR para proceder.';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showLoader('Subiendo e Importando Respaldo', 'Subiendo archivo ZIP/SQL y procesando restauración en el servidor...');
+
+                const formData = new FormData();
+                formData.append('backup_file', file);
+
+                fetch("{{ route('backups.uploadRestore') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    hideLoader();
+                    input.value = '';
+
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Importación Completa!',
+                            text: 'El sistema fue restaurado correctamente con el archivo subido.',
+                            icon: 'success',
+                            confirmButtonColor: '#10b981',
+                            background: isDark ? '#1e293b' : '#ffffff',
+                            color: isDark ? '#f1f5f9' : '#1e293b',
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error de importación',
+                            text: data.error || 'Ocurrió un error al procesar el archivo subido.',
+                            icon: 'error',
+                            confirmButtonColor: '#6366f1',
+                            background: isDark ? '#1e293b' : '#ffffff',
+                            color: isDark ? '#f1f5f9' : '#1e293b',
+                        });
+                    }
+                })
+                .catch(err => {
+                    hideLoader();
+                    input.value = '';
+                    console.error(err);
+                    Swal.fire({
+                        title: 'Error de comunicación',
+                        text: 'No se pudo subir el archivo o procesarlo en el servidor.',
+                        icon: 'error',
+                        confirmButtonColor: '#6366f1',
+                        background: isDark ? '#1e293b' : '#ffffff',
+                        color: isDark ? '#f1f5f9' : '#1e293b',
+                    });
+                });
+            } else {
+                input.value = '';
             }
         });
     }
