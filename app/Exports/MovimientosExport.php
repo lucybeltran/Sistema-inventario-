@@ -63,8 +63,8 @@ class MovimientosExport implements FromArray, WithHeadings, WithTitle, WithColum
             });
         }
 
-        // Ordenar cronológicamente para reportes claros
-        $movimientos = $query->orderBy('fecha', 'asc')->orderBy('created_at', 'asc')->get();
+        // Ordenar desde el más reciente al más antiguo para reportes claros
+        $movimientos = $query->orderBy('fecha', 'desc')->orderBy('created_at', 'desc')->get();
 
         $datos = [];
         foreach ($movimientos as $mov) {

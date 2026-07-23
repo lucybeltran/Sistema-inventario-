@@ -294,7 +294,7 @@ class ReporteController extends Controller
             });
         }
 
-        $movimientos = $query->orderBy('fecha', 'asc')->orderBy('created_at', 'asc')->get();
+        $movimientos = $query->orderBy('fecha', 'desc')->orderBy('created_at', 'desc')->get();
 
         $desde = $request->desde;
         $hasta = $request->hasta;
@@ -360,8 +360,8 @@ class ReporteController extends Controller
         if ($desde) $query->whereDate('fecha', '>=', $desde);
         if ($hasta) $query->whereDate('fecha', '<=', $hasta);
 
-        $movimientos = $query->orderBy('fecha', 'asc')
-                             ->orderBy('created_at', 'asc')
+        $movimientos = $query->orderBy('fecha', 'desc')
+                             ->orderBy('created_at', 'desc')
                              ->paginate(30)->withQueryString();
 
         // Estadísticas del trabajador filtradas por fecha
@@ -421,7 +421,7 @@ class ReporteController extends Controller
         if ($request->desde) $query->whereDate('fecha', '>=', $request->desde);
         if ($request->hasta) $query->whereDate('fecha', '<=', $request->hasta);
 
-        $movimientos = $query->orderBy('fecha', 'asc')->orderBy('created_at', 'asc')->get();
+        $movimientos = $query->orderBy('fecha', 'desc')->orderBy('created_at', 'desc')->get();
 
         $desde = $request->desde;
         $hasta = $request->hasta;
