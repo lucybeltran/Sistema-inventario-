@@ -8,96 +8,516 @@
         display: flex; justify-content: space-between; align-items: center;
         margin-bottom: 25px; flex-wrap: wrap; gap: 15px;
     }
-    .page-title {
-        color: #667eea; font-size: 24px; font-weight: 600;
+    .page-header .page-title {
+        color: var(--text-primary) !important;
+        -webkit-text-fill-color: var(--text-primary) !important;
+        font-size: 24px !important;
+        font-weight: 700 !important;
         display: flex; align-items: center; gap: 10px;
     }
-    .page-counter {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white; padding: 6px 14px; border-radius: 20px;
-        font-size: 13px; font-weight: 600;
+    .page-header .page-title i {
+        color: #2563eb !important;
+    }
+    .page-header .page-counter {
+        background: rgba(37, 99, 235, 0.08) !important;
+        color: #2563eb !important;
+        border: 1.5px solid rgba(37, 99, 235, 0.18) !important;
+        -webkit-text-fill-color: #2563eb !important;
+        padding: 5px 14px !important;
+        border-radius: 20px !important;
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.2px !important;
+    }
+    [data-theme="dark"] .page-header .page-counter {
+        background: rgba(96, 165, 250, 0.1) !important;
+        color: #60a5fa !important;
+        -webkit-text-fill-color: #60a5fa !important;
+        border-color: rgba(96, 165, 250, 0.25) !important;
     }
     .valor-total {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        color: white; padding: 8px 16px; border-radius: 20px;
-        font-size: 13px; font-weight: 600;
+        background: rgba(16, 185, 129, 0.08) !important;
+        color: #059669 !important;
+        border: 1.5px solid rgba(16, 185, 129, 0.18) !important;
+        -webkit-text-fill-color: #059669 !important;
+        padding: 5px 14px !important;
+        border-radius: 20px !important;
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
         display: inline-flex; align-items: center; gap: 6px;
+        letter-spacing: 0.2px !important;
+    }
+    [data-theme="dark"] .valor-total {
+        background: rgba(52, 211, 153, 0.1) !important;
+        color: #34d399 !important;
+        -webkit-text-fill-color: #34d399 !important;
+        border-color: rgba(52, 211, 153, 0.25) !important;
     }
     .filters {
-        background: #f8f9fa; padding: 20px; border-radius: 10px;
-        margin-bottom: 20px; display: grid;
-        grid-template-columns: 2fr 1fr 1fr auto; gap: 12px; align-items: end;
+        background: var(--bg-card) !important;
+        padding: 20px; border-radius: 16px;
+        margin-bottom: 24px; display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto; gap: 16px; align-items: end;
+        border: 1.5px solid var(--border) !important;
+        box-shadow: var(--shadow) !important;
     }
     .filters .form-field { display: flex; flex-direction: column; gap: 5px; }
     .filters label {
-        font-size: 12px; font-weight: 600; color: #555;
-        text-transform: uppercase; letter-spacing: 0.5px;
+        font-size: 11px; font-weight: 700; color: var(--text-muted) !important;
+        text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;
     }
     .filters input, .filters select {
-        padding: 10px 14px; border: 2px solid #e0e0e0;
-        border-radius: 8px; font-size: 14px; background: white;
+        padding: 10px 16px; border: 1.5px solid var(--border) !important;
+        border-radius: 10px; font-size: 13.5px; background: var(--bg-input) !important;
+        color: var(--text-primary) !important;
+        transition: all 0.25s ease;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+    }
+    .filters input:focus, .filters select:focus {
+        outline: none; border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
     }
     .btn {
-        padding: 10px 18px; border: none; border-radius: 8px;
-        font-size: 14px; font-weight: 500; cursor: pointer;
-        transition: all 0.3s; display: inline-flex; align-items: center;
+        padding: 10px 18px; border: none; border-radius: 12px;
+        font-size: 13.5px; font-weight: 600; cursor: pointer;
+        transition: all 0.25s ease; display: inline-flex; align-items: center;
         gap: 6px; text-decoration: none;
     }
-    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
-    .btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; }
-    .btn-success:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4); }
-    .btn-secondary { background: #f0f0f0; color: #555; }
-    .btn-secondary:hover { background: #e0e0e0; }
-    .btn-grupos { background: linear-gradient(135deg, #f59f00 0%, #f76707 100%); color: white; }
-    .btn-grupos:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(245, 159, 0, 0.4); }
-    .btn-danger { background: #ff6b6b; color: white; }
-    .btn-edit { background: #ffa94d; color: white; }
-    .btn-edit:hover { background: #ff922b; }
+    .btn-primary {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2) !important;
+        border: none !important;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35) !important;
+    }
+    .btn-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+        border: none !important;
+    }
+    .btn-success:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35) !important;
+    }
+    .btn-secondary {
+        background: var(--bg-card) !important;
+        color: var(--text-primary) !important;
+        border: 1.5px solid var(--border) !important;
+        box-shadow: var(--shadow) !important;
+    }
+    .btn-secondary:hover {
+        background: var(--bg-hover) !important;
+        transform: translateY(-2px) !important;
+    }
+    .btn-grupos {
+        background: #334155 !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(51, 65, 85, 0.2) !important;
+        border: none !important;
+    }
+    .btn-grupos:hover {
+        background: #1e293b !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 16px rgba(51, 65, 85, 0.35) !important;
+    }
+    .acciones-cell {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+    .btn-action {
+        width: 32px !important;
+        height: 32px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 10px !important;
+        cursor: pointer !important;
+        background: var(--bg-card) !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        text-decoration: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+    .btn-action i {
+        font-size: 13px !important;
+        transition: color 0.2s ease !important;
+    }
+    .btn-action-kardex {
+        color: #2563eb !important;
+        -webkit-text-fill-color: #2563eb !important;
+        border-color: rgba(37, 99, 235, 0.15) !important;
+        background: rgba(37, 99, 235, 0.04) !important;
+    }
+    .btn-action-kardex:hover {
+        background: #2563eb !important;
+        color: white !important;
+        -webkit-text-fill-color: white !important;
+        border-color: transparent !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+        transform: translateY(-2px) !important;
+    }
+    .btn-action-edit {
+        color: #059669 !important;
+        -webkit-text-fill-color: #059669 !important;
+        border-color: rgba(5, 150, 105, 0.15) !important;
+        background: rgba(5, 150, 105, 0.04) !important;
+    }
+    .btn-action-edit:hover {
+        background: #059669 !important;
+        color: white !important;
+        -webkit-text-fill-color: white !important;
+        border-color: transparent !important;
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25) !important;
+        transform: translateY(-2px) !important;
+    }
+    .btn-action-delete {
+        color: #dc2626 !important;
+        -webkit-text-fill-color: #dc2626 !important;
+        border-color: rgba(220, 38, 38, 0.15) !important;
+        background: rgba(220, 38, 38, 0.04) !important;
+    }
+    .btn-action-delete:hover {
+        background: #dc2626 !important;
+        color: white !important;
+        -webkit-text-fill-color: white !important;
+        border-color: transparent !important;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25) !important;
+        transform: translateY(-2px) !important;
+    }
+
     .btn-group { display: flex; gap: 8px; }
 
+
+    /* ─────────────── SEPARADORES DE COLUMNA CON COLORES BAJITOS ─────────────── */
+    /* Azul — Stock */
+    .col-stock { border-left: 3px solid rgba(37, 99, 235, 0.30) !important; }
+    table thead .col-stock {
+        background: rgba(37, 99, 235, 0.07) !important;
+    }
+    table tbody td.col-stock {
+        background: rgba(37, 99, 235, 0.04) !important;
+    }
+    table tbody tr:hover td.col-stock {
+        background: rgba(37, 99, 235, 0.09) !important;
+    }
+
+    /* Verde — Precio Unitario */
+    .col-precio { border-left: 3px solid rgba(5, 150, 105, 0.30) !important; }
+    table thead .col-precio {
+        background: rgba(5, 150, 105, 0.07) !important;
+    }
+    table tbody td.col-precio {
+        background: rgba(5, 150, 105, 0.04) !important;
+    }
+    table tbody tr:hover td.col-precio {
+        background: rgba(5, 150, 105, 0.09) !important;
+    }
+
+    /* Ámbar — Valor Total */
+    .col-valor { border-left: 3px solid rgba(217, 119, 6, 0.30) !important; }
+    table thead .col-valor {
+        background: rgba(217, 119, 6, 0.07) !important;
+    }
+    table tbody td.col-valor {
+        background: rgba(217, 119, 6, 0.04) !important;
+    }
+    table tbody tr:hover td.col-valor {
+        background: rgba(217, 119, 6, 0.09) !important;
+    }
+
+    /* Violeta — Notas/Obs. */
+    .col-notas { border-left: 3px solid rgba(168, 85, 247, 0.30) !important; }
+    table thead .col-notas {
+        background: rgba(168, 85, 247, 0.07) !important;
+    }
+    table tbody td.col-notas {
+        background: rgba(168, 85, 247, 0.04) !important;
+    }
+    table tbody tr:hover td.col-notas {
+        background: rgba(168, 85, 247, 0.09) !important;
+    }
+
+    /* Gris pizarra — Acciones */
+    .col-acciones { border-left: 3px solid rgba(100, 116, 139, 0.28) !important; }
+    table thead .col-acciones {
+        background: rgba(100, 116, 139, 0.07) !important;
+    }
+    table tbody td.col-acciones {
+        background: rgba(100, 116, 139, 0.04) !important;
+    }
+    table tbody tr:hover td.col-acciones {
+        background: rgba(100, 116, 139, 0.09) !important;
+    }
+    /* ─────────────── FIN SEPARADORES ─────────────── */
+
+
     .table-container {
-        background: white; border-radius: 10px;
-        overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        background: var(--bg-card) !important;
+        border-radius: 16px !important;
+        border: 1.5px solid var(--border) !important;
+        box-shadow: var(--shadow) !important;
+        overflow: hidden !important;
     }
     table { width: 100%; border-collapse: collapse; }
     table th {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 14px 12px; text-align: left;
-        font-weight: 600; color: #333;
-        border-bottom: 2px solid #e0e0e0;
-        font-size: 13px; text-transform: uppercase;
+        background: var(--bg-card) !important;
+        padding: 16px 12px !important;
+        text-align: left;
+        font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif !important;
+        font-weight: 700 !important;
+        color: var(--text-primary) !important;
+        border-bottom: 2.5px solid var(--border) !important;
+        font-size: 11.5px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1.2px !important;
+        opacity: 0.95;
     }
-    table td { padding: 14px 12px; border-bottom: 1px solid #f0f0f0; }
-    table tbody tr { transition: all 0.2s; }
-    table tbody tr:hover { background: #faf9ff; }
+    table td {
+        padding: 16px 12px !important;
+        border-bottom: 1px solid var(--border-light) !important;
+        color: var(--text-primary) !important;
+    }
+    table tbody tr { transition: all 0.2s; background: transparent !important; }
+    table tbody tr:hover { background: var(--bg-hover) !important; }
+
+    /* Nombre del material destacado */
+    .articulo-nombre {
+        font-weight: 600;
+        color: var(--text-primary) !important;
+        font-size: 14.5px;
+        letter-spacing: -0.1px;
+    }
 
     /* Fila separadora de grupo */
-    .grupo-separador-row td {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        color: white; font-weight: 700; font-size: 14px;
-        padding: 12px 14px;
+    table tbody tr.grupo-separador-row td {
+        background: var(--group-header-bg) !important;
+        color: var(--group-color) !important;
+        -webkit-text-fill-color: var(--group-color) !important;
+        font-weight: 800 !important;
+        font-size: 12.5px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        border-bottom: 2px solid var(--group-border) !important;
+        border-top: none !important;
+        border-left: 5px solid var(--group-color) !important;
+        padding: 13px 18px !important;
+    }
+    table tbody tr.grupo-separador-row td i {
+        color: var(--group-color) !important;
+        margin-right: 8px !important;
+        opacity: 0.8;
     }
 
-    .codigo { font-family: 'Courier New', monospace; font-weight: bold; color: #667eea; }
+    .badge-rotacion-diario {
+        display: inline-block;
+        background: rgba(71, 85, 105, 0.03) !important;
+        color: #64748b !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        font-size: 8.5px !important;
+        font-weight: 600 !important;
+        margin-left: 8px !important;
+        text-transform: uppercase !important;
+        border: 1px solid rgba(71, 85, 105, 0.1) !important;
+        letter-spacing: 0.3px;
+        opacity: 0.65;
+    }
+    [data-theme="dark"] .badge-rotacion-diario {
+        color: #94a3b8 !important;
+        background: rgba(148, 163, 184, 0.05) !important;
+        border-color: rgba(148, 163, 184, 0.1) !important;
+    }
+
+    .badge-rotacion-ocasional {
+        display: inline-block;
+        background: rgba(71, 85, 105, 0.03) !important;
+        color: #64748b !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        font-size: 8.5px !important;
+        font-weight: 600 !important;
+        margin-left: 8px !important;
+        text-transform: uppercase !important;
+        border: 1px solid rgba(71, 85, 105, 0.1) !important;
+        letter-spacing: 0.3px;
+        opacity: 0.65;
+    }
+    [data-theme="dark"] .badge-rotacion-ocasional {
+        color: #94a3b8 !important;
+        background: rgba(148, 163, 184, 0.05) !important;
+        border-color: rgba(148, 163, 184, 0.1) !important;
+    }
+
+    table tbody td .codigo {
+        font-family: 'Courier New', monospace !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        -webkit-text-fill-color: #475569 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        font-size: 12.5px !important;
+        letter-spacing: 0.5px !important;
+        white-space: nowrap !important;
+    }
+    [data-theme="dark"] table tbody td .codigo {
+        color: #94a3b8 !important;
+        -webkit-text-fill-color: #94a3b8 !important;
+        background: transparent !important;
+        border: none !important;
+    }
     .stock-badge {
         display: inline-block; padding: 4px 10px;
-        border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 6px;
+        border-radius: 20px; font-size: 10.5px; font-weight: 700; margin-left: 6px;
+        letter-spacing: 0.4px; text-transform: uppercase;
     }
-    .stock-ok { background: #d3f9d8; color: #2b8a3e; }
-    .stock-bajo { background: #fff3bf; color: #7f6b0d; }
-    .stock-cero { background: #ffe3e3; color: #862e2e; }
-    .precio { font-weight: 600; color: #2b8a3e; font-family: 'Courier New', monospace; }
+    /* Normal: azul eléctrico */
+    .stock-ok {
+        background: rgba(37, 99, 235, 0.10) !important;
+        color: #1d4ed8 !important;
+        border: 1.5px solid rgba(37, 99, 235, 0.25) !important;
+    }
+    [data-theme="dark"] .stock-ok {
+        background: rgba(96, 165, 250, 0.12) !important;
+        color: #60a5fa !important;
+        border-color: rgba(96, 165, 250, 0.3) !important;
+    }
+    /* Medio: ámbar vibrante */
+    .stock-medio {
+        background: rgba(245, 158, 11, 0.12) !important;
+        color: #b45309 !important;
+        border: 1.5px solid rgba(245, 158, 11, 0.30) !important;
+    }
+    [data-theme="dark"] .stock-medio {
+        background: rgba(251, 191, 36, 0.12) !important;
+        color: #fbbf24 !important;
+        border-color: rgba(251, 191, 36, 0.35) !important;
+    }
+    /* Bajo: rojo fuerte */
+    .stock-bajo {
+        background: rgba(220, 38, 38, 0.10) !important;
+        color: #b91c1c !important;
+        border: 1.5px solid rgba(220, 38, 38, 0.28) !important;
+    }
+    [data-theme="dark"] .stock-bajo {
+        background: rgba(248, 113, 113, 0.12) !important;
+        color: #f87171 !important;
+        border-color: rgba(248, 113, 113, 0.35) !important;
+    }
+    /* Sin Stock: gris oscuro neutro */
+    .stock-cero {
+        background: rgba(71, 85, 105, 0.10) !important;
+        color: #334155 !important;
+        border: 1.5px solid rgba(71, 85, 105, 0.25) !important;
+    }
+    [data-theme="dark"] .stock-cero {
+        background: rgba(148, 163, 184, 0.10) !important;
+        color: #94a3b8 !important;
+        border-color: rgba(148, 163, 184, 0.25) !important;
+    }
+    /* Precio unitario: azul zafiro */
+    .precio { font-weight: 600; color: #2563eb; font-family: 'Courier New', monospace; }
+    [data-theme="dark"] .precio { color: #60a5fa !important; }
+    /* Precio múltiple: violeta amatista */
+    .precio-multiple { font-weight: 700; color: #7c3aed !important; font-family: 'Courier New', monospace; }
+    [data-theme="dark"] .precio-multiple { color: #a78bfa !important; }
+    /* Valor total: índigo profundo (no verde) */
+    .precio-total { font-weight: 700; color: #4338ca; font-family: 'Courier New', monospace; }
+    [data-theme="dark"] .precio-total { color: #818cf8 !important; }
+
     .grupo-tag {
-        display: inline-block; background: #e9ecef; color: #495057;
-        padding: 3px 10px; border-radius: 10px;
-        font-size: 11px; font-weight: 600; font-family: 'Courier New', monospace;
+        display: inline-block !important;
+        background: var(--group-bg, var(--bg-hover)) !important;
+        color: var(--group-color, var(--text-muted)) !important;
+        border: 1px solid var(--group-border, var(--border)) !important;
+        padding: 3px 8px !important;
+        border-radius: 6px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
     }
-    .acciones-cell { display: flex; gap: 5px; }
-    .acciones-cell button {
-        padding: 6px 10px; font-size: 12px;
-        border: none; border-radius: 6px; cursor: pointer;
+
+    /* Paleta de colores para los grupos */
+    .grupo-carmesi {
+        --group-color: #9f1239;
+        --group-bg: rgba(190, 18, 60, 0.06);
+        --group-border: rgba(190, 18, 60, 0.28);
+        --group-header-bg: rgba(190, 18, 60, 0.13);
     }
+    .grupo-zafiro {
+        --group-color: #1e40af;
+        --group-bg: rgba(29, 78, 216, 0.06);
+        --group-border: rgba(29, 78, 216, 0.28);
+        --group-header-bg: rgba(29, 78, 216, 0.13);
+    }
+    .grupo-amatista {
+        --group-color: #6d28d9;
+        --group-bg: rgba(109, 40, 217, 0.06);
+        --group-border: rgba(109, 40, 217, 0.28);
+        --group-header-bg: rgba(109, 40, 217, 0.13);
+    }
+    .grupo-esmeralda {
+        --group-color: #065f46;
+        --group-bg: rgba(4, 120, 87, 0.06);
+        --group-border: rgba(4, 120, 87, 0.28);
+        --group-header-bg: rgba(4, 120, 87, 0.13);
+    }
+    .grupo-ambar {
+        --group-color: #92400e;
+        --group-bg: rgba(180, 83, 9, 0.06);
+        --group-border: rgba(180, 83, 9, 0.28);
+        --group-header-bg: rgba(180, 83, 9, 0.13);
+    }
+    .grupo-pizarra {
+        --group-color: #1e293b;
+        --group-bg: rgba(30, 41, 59, 0.06);
+        --group-border: rgba(30, 41, 59, 0.28);
+        --group-header-bg: rgba(30, 41, 59, 0.13);
+    }
+
+    [data-theme="dark"] .grupo-carmesi {
+        --group-color: #fda4af;
+        --group-bg: rgba(251, 113, 133, 0.07);
+        --group-border: rgba(251, 113, 133, 0.25);
+        --group-header-bg: rgba(251, 113, 133, 0.14);
+    }
+    [data-theme="dark"] .grupo-zafiro {
+        --group-color: #93c5fd;
+        --group-bg: rgba(96, 165, 250, 0.07);
+        --group-border: rgba(96, 165, 250, 0.25);
+        --group-header-bg: rgba(96, 165, 250, 0.14);
+    }
+    [data-theme="dark"] .grupo-amatista {
+        --group-color: #c4b5fd;
+        --group-bg: rgba(167, 139, 250, 0.07);
+        --group-border: rgba(167, 139, 250, 0.25);
+        --group-header-bg: rgba(167, 139, 250, 0.14);
+    }
+    [data-theme="dark"] .grupo-esmeralda {
+        --group-color: #6ee7b7;
+        --group-bg: rgba(52, 211, 153, 0.07);
+        --group-border: rgba(52, 211, 153, 0.25);
+        --group-header-bg: rgba(52, 211, 153, 0.14);
+    }
+    [data-theme="dark"] .grupo-ambar {
+        --group-color: #fcd34d;
+        --group-bg: rgba(251, 191, 36, 0.07);
+        --group-border: rgba(251, 191, 36, 0.25);
+        --group-header-bg: rgba(251, 191, 36, 0.14);
+    }
+    [data-theme="dark"] .grupo-pizarra {
+        --group-color: #cbd5e1;
+        --group-bg: rgba(148, 163, 184, 0.07);
+        --group-border: rgba(148, 163, 184, 0.25);
+        --group-header-bg: rgba(148, 163, 184, 0.14);
+    }
+
     .empty { text-align: center; padding: 50px 20px; color: #999; }
     .empty i { font-size: 64px; opacity: 0.3; margin-bottom: 15px; }
 
@@ -197,8 +617,60 @@
         animation: slideInRight 0.3s;
     }
 
-    .mensaje-success {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    /* Notas / Observaciones */
+    .notas-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        background: rgba(168, 85, 247, 0.1);
+        border: 1px solid rgba(168, 85, 247, 0.2);
+        color: #a855f7;
+        font-size: 11px;
+        cursor: help;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+    .notas-icon:hover {
+        background: rgba(168, 85, 247, 0.18);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(168, 85, 247, 0.2);
+    }
+    .notas-tooltip {
+        display: none;
+        position: absolute;
+        bottom: 110%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1e1b4b;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        white-space: pre-wrap;
+        max-width: 220px;
+        min-width: 120px;
+        text-align: left;
+        line-height: 1.5;
+        z-index: 100;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    .notas-tooltip::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: #1e1b4b;
+    }
+    .notas-icon:hover .notas-tooltip { display: block; }
+    .sin-notas {
+        color: var(--text-muted);
+        font-size: 13px;
+        opacity: 0.4;
     }
 
     .mensaje-error {
@@ -217,8 +689,8 @@
     <div class="page-header">
         <h2 class="page-title">
             <i class="fas fa-list"></i> Inventario
-            <span class="page-counter">{{ $total }} artículos</span>
-            <span class="valor-total">
+            <span class="page-counter" id="inventario-count">{{ $total }} artículos</span>
+            <span class="valor-total" id="inventario-valor">
                 <i class="fas fa-dollar-sign"></i>
                 Valor: Bs. {{ number_format($valorInventario, 2) }}
             </span>
@@ -265,111 +737,179 @@
             </select>
         </div>
         <div class="btn-group">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-search"></i> Buscar
-            </button>
-            <a href="{{ route('inventario.index') }}" class="btn btn-secondary">
-                <i class="fas fa-times"></i>
+            <a href="{{ route('inventario.index') }}" class="btn btn-secondary" title="Limpiar filtros" style="display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas fa-times"></i> Limpiar
             </a>
         </div>
     </form>
 
-    @if($articulos->isEmpty())
-        <div class="empty">
-            <i class="fas fa-search"></i>
-            <p>No se encontraron artículos.</p>
-        </div>
-    @else
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 105px;">Código</th>
-                        <th>Descripción</th>
-                        <th style="width: 70px;">Grupo</th>
-                        <th style="width: 80px;">Unidad</th>
-                        <th style="width: 140px;">Stock</th>
-                        <th style="width: 100px;">Precio Unit.</th>
-                        <th style="width: 110px;">Valor Total</th>
-                        @if(Auth::user()->puedeEditar() || Auth::user()->puedeReportes())
-                            <th style="width: 130px;">Acciones</th>
-                        @endif
-                    </tr>
-                </thead>
-                <tbody>
-                    @php $grupoActual = null; @endphp
-                    @foreach($articulos as $articulo)
-                        @if($articulo->grupo_id !== $grupoActual)
-                            @php $grupoActual = $articulo->grupo_id; @endphp
-                            <tr class="grupo-separador-row">
-                                <td colspan="{{ (Auth::user()->puedeEditar() || Auth::user()->puedeReportes()) ? 8 : 7 }}">
-                                    <i class="fas fa-folder"></i>
-                                    {{ $articulo->grupo_id }} — {{ $articulo->grupo->nombre ?? '' }}
-                                </td>
-                            </tr>
-                        @endif
+    <div id="inventario-table-wrapper" style="transition: opacity 0.15s ease-in-out;">
+        @if($articulos->isEmpty())
+            <div class="empty">
+                <i class="fas fa-search"></i>
+                <p>No se encontraron artículos.</p>
+            </div>
+        @else
+            <div class="table-container">
+                <table>
+                    <thead>
                         <tr>
-                            <td><span class="codigo">{{ $articulo->codigo }}</span></td>
-                            <td>{{ $articulo->nombre }}</td>
-                            <td><span class="grupo-tag">{{ $articulo->grupo_id }}</span></td>
-                            <td>{{ $articulo->unidad }}</td>
-                            <td>
-                                <strong>{{ number_format($articulo->cantidad, 3) }}</strong>
-                                @if($articulo->cantidad <= 0)
-                                    <span class="stock-badge stock-cero">Sin stock</span>
-                                @elseif($articulo->cantidad < 10)
-                                    <span class="stock-badge stock-bajo">Bajo</span>
-                                @else
-                                    <span class="stock-badge stock-ok">OK</span>
-                                @endif
-                            </td>
-                            <td><span class="precio">Bs. {{ number_format($articulo->precio, 2) }}</span></td>
-                            <td><strong style="color:#11998e;">Bs. {{ number_format($articulo->precio * $articulo->cantidad, 2) }}</strong></td>
+                            <th style="width: 105px;">Código</th>
+                            <th>Descripción</th>
+                            <th style="width: 70px;">Grupo</th>
+                            <th style="width: 80px;">Unidad</th>
+                            <th style="width: 140px;" class="col-stock">Stock</th>
+                            <th style="width: 100px;" class="col-precio">Precio Unit.</th>
+                            <th style="width: 110px;" class="col-valor">Valor Total</th>
+                            <th style="width: 60px;" class="col-notas">Obs.</th>
                             @if(Auth::user()->puedeEditar() || Auth::user()->puedeReportes())
-                                <td>
-                                    <div class="acciones-cell">
-                                        @if(Auth::user()->puedeReportes())
-                                            <a href="{{ route('reportes.kardex', $articulo->id) }}"
-                                               title="Ver Kardex"
-                                               style="padding:6px 10px; font-size:12px; background:#667eea; color:white; border-radius:6px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
-                                                <i class="fas fa-clipboard-list"></i>
-                                            </a>
-                                        @endif
-                                        @if(Auth::user()->puedeEditar())
-                                            <button class="btn-edit"
-                                                    onclick="abrirModalEditar({{ $articulo->id }}, '{{ addslashes($articulo->codigo) }}', '{{ addslashes($articulo->nombre) }}', '{{ addslashes($articulo->unidad) }}', '{{ $articulo->grupo_id }}', {{ $articulo->cantidad }}, {{ $articulo->precio }})"
-                                                    title="Editar">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                        @endif
-                                        @if(Auth::user()->esAdmin())
-                                            <button type="button"
-                                                    class="btn-danger"
-                                                    title="Eliminar artículo"
-                                                    onclick="abrirModalEliminarArticulo(
-                                                        {{ $articulo->id }},
-                                                        '{{ $articulo->codigo }}',
-                                                        '{{ addslashes($articulo->nombre) }}',
-                                                        '{{ $articulo->unidad }}',
-                                                        {{ $articulo->cantidad }},
-                                                        {{ $articulo->movimientos_count ?? 0 }}
-                                                    )">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        @endif
-                                    </div>
-                                </td>
+                                <th style="width: 130px;" class="col-acciones">Acciones</th>
                             @endif
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                        @php
+                            $grupoActual = null;
+                            if (!function_exists('getGrupoColorClass')) {
+                                function getGrupoColorClass($grupoId) {
+                                    $num = intval(preg_replace('/[^0-9]/', '', $grupoId));
+                                    switch ($num) {
+                                        case 1: return 'grupo-carmesi';
+                                        case 2: return 'grupo-zafiro';
+                                        case 3: return 'grupo-amatista';
+                                        case 4: return 'grupo-esmeralda';
+                                        case 5: return 'grupo-ambar';
+                                        default: return 'grupo-pizarra';
+                                    }
+                                }
+                            }
+                        @endphp
+                        @foreach($articulos as $articulo)
+                            @if($articulo->grupo_id !== $grupoActual)
+                                @php $grupoActual = $articulo->grupo_id; @endphp
+                                <tr class="grupo-separador-row {{ getGrupoColorClass($articulo->grupo_id) }}">
+                                    <td colspan="{{ (Auth::user()->puedeEditar() || Auth::user()->puedeReportes()) ? 9 : 8 }}">
+                                        <i class="fas fa-folder"></i>
+                                        {{ $articulo->grupo_id }} — {{ $articulo->grupo->nombre ?? '' }}
+                                    </td>
+                                </tr>
+                            @endif
+                            <tr class="{{ getGrupoColorClass($articulo->grupo_id) }}">
+                                <td><span class="codigo">{{ $articulo->codigo }}</span></td>
+                                <td>
+                                    <span class="articulo-nombre">{{ $articulo->nombre }}</span>
+                                    @if($articulo->esConsumoDiario())
+                                        <span class="badge-rotacion-diario" style="background: rgba(34,197,94,0.08) !important; color: #15803d !important; border: 1px solid rgba(34,197,94,0.25) !important;">CONSUMIBLES</span>
+                                    @elseif($articulo->esPrestamo())
+                                        <span class="badge-rotacion-diario" style="background: rgba(249,115,22,0.08) !important; color: #c2410c !important; border: 1px solid rgba(249,115,22,0.25) !important;">ACTIVO / EN USO</span>
+                                    @else
+                                        <span class="badge-rotacion-ocasional" style="background: rgba(99,102,241,0.08) !important; color: #4338ca !important; border: 1px solid rgba(99,102,241,0.25) !important;">RESERVA / EN ALMACÉN</span>
+                                    @endif
+                                </td>
+                                <td><span class="grupo-tag">{{ $articulo->grupo_id }}</span></td>
+                                <td>{{ $articulo->unidad }}</td>
+                                <td class="col-stock">
+                                    <strong>{{ number_format($articulo->cantidad, 3) }}</strong>
+                                    @php
+                                        $minimo = $articulo->stock_minimo > 0 ? $articulo->stock_minimo : 10;
+                                        $medio = $minimo * 1.5;
+                                    @endphp
+                                    @if($articulo->cantidad <= 0)
+                                        <span class="stock-badge stock-cero">Sin stock</span>
+                                    @elseif($articulo->cantidad <= $minimo)
+                                        <span class="stock-badge stock-bajo">Bajo</span>
+                                    @elseif($articulo->cantidad <= $medio)
+                                        <span class="stock-badge stock-medio">Medio</span>
+                                    @else
+                                        <span class="stock-badge stock-ok">Normal</span>
+                                    @endif
+                                </td>
+                                <td class="col-precio">
+                                    @if(isset($preciosPorArticulo[$articulo->id]) && count($preciosPorArticulo[$articulo->id]) > 1)
+                                        <div style="display: flex; flex-direction: column; gap: 3px;">
+                                            @foreach($preciosPorArticulo[$articulo->id] as $p)
+                                                @php
+                                                    $cant = floatval($p['cantidad']);
+                                                    $cantFormated = ($cant == intval($cant)) ? number_format($cant, 0) : number_format($cant, 2);
+                                                @endphp
+                                                <div style="white-space: nowrap; font-size: 13px;">
+                                                    <span class="precio-multiple">Bs. {{ number_format($p['precio'], 2) }}</span>
+                                                    <span style="color: var(--text-muted); font-size: 11px; margin-left: 3px;">({{ $cantFormated }} {{ strtolower($articulo->unidad) }})</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @elseif(isset($preciosPorArticulo[$articulo->id]) && count($preciosPorArticulo[$articulo->id]) === 1)
+                                        <span class="precio">Bs. {{ number_format(data_get($preciosPorArticulo[$articulo->id], '0.precio'), 2) }}</span>
+                                    @else
+                                        <span class="precio">Bs. {{ number_format($articulo->precio, 2) }}</span>
+                                    @endif
+                                </td>
+                                <td class="col-valor">
+                                    @if(isset($valorPorArticulo[$articulo->id]))
+                                        <strong class="precio-total">Bs. {{ number_format($valorPorArticulo[$articulo->id], 2) }}</strong>
+                                    @else
+                                        <strong class="precio-total">Bs. {{ number_format($articulo->precio * $articulo->cantidad, 2) }}</strong>
+                                    @endif
+                                </td>
+                                <td class="col-notas" style="text-align: center;">
+                                    @if($articulo->notas)
+                                        <div class="notas-icon" title="{{ $articulo->notas }}">
+                                            <i class="fas fa-sticky-note"></i>
+                                            <div class="notas-tooltip">{{ $articulo->notas }}</div>
+                                        </div>
+                                    @else
+                                        <span class="sin-notas">—</span>
+                                    @endif
+                                </td>
+                                @if(Auth::user()->puedeEditar() || Auth::user()->puedeReportes())
+                                    <td class="col-acciones">
+                                        <div class="acciones-cell">
+                                            @if(Auth::user()->puedeReportes() || Auth::user()->esAlmacenero() || Auth::user()->puedeEditar())
+                                                <a href="{{ route('reportes.kardex', $articulo->id) }}?from=inventario"
+                                                   class="btn-action btn-action-kardex"
+                                                   title="Ver Kardex / Reportes">
+                                                    <i class="fas fa-history"></i>
+                                                </a>
+                                            @endif
+                                            @if(Auth::user()->puedeEditarMateriales())
+                                                @php
+                                                    $tieneMultiplesPrecios = (isset($preciosPorArticulo[$articulo->id]) && count($preciosPorArticulo[$articulo->id]) > 1) ? 'true' : 'false';
+                                                @endphp
+                                                <button class="btn-action btn-action-edit"
+                                                         onclick="abrirModalEditar({{ $articulo->id }}, '{{ addslashes($articulo->codigo) }}', '{{ addslashes($articulo->nombre) }}', '{{ addslashes($articulo->unidad) }}', '{{ $articulo->grupo_id }}', {{ $articulo->cantidad }}, {{ $articulo->precio }}, {{ $tieneMultiplesPrecios }}, '{{ addslashes($articulo->notas ?? '') }}')"
+                                                         title="Editar">
+                                                     <i class="fas fa-edit"></i>
+                                                </button>
+                                            @endif
+                                            @if(Auth::user()->esAdmin())
+                                                <button type="button"
+                                                        class="btn-action btn-action-delete"
+                                                        title="Eliminar artículo"
+                                                        onclick="abrirModalEliminarArticulo(
+                                                            {{ $articulo->id }},
+                                                            '{{ $articulo->codigo }}',
+                                                            '{{ addslashes($articulo->nombre) }}',
+                                                            '{{ $articulo->unidad }}',
+                                                            {{ $articulo->cantidad }},
+                                                            {{ $articulo->movimientos_count ?? 0 }}
+                                                        )">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                @endif
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
 
-        <div style="margin-top:20px; display:flex; justify-content:center;">
-            {{ $articulos->links() }}
-        </div>
-    @endif
+            <div style="margin-top:20px; display:flex; justify-content:center;">
+                {{ $articulos->links() }}
+            </div>
+        @endif
+    </div>
 
     @if(Auth::user()->puedeEditar())
 
@@ -423,6 +963,10 @@
                             <label><i class="fas fa-dollar-sign"></i> Precio unitario (Bs.)</label>
                             <input type="number" name="precio" value="{{ old('precio', 0) }}" min="0" step="0.01">
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-sticky-note"></i> Observaciones / Notas <span style="font-weight:400; opacity:0.6;">(opcional)</span></label>
+                        <textarea name="notas" rows="2" style="resize:vertical; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 13px; background: var(--bg-input); color: var(--text-primary); width: 100%; font-family: inherit;" placeholder="Ej: Pieza con desgaste, revisar antes de usar...">{{ old('notas') }}</textarea>
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-success" style="flex:1; justify-content:center;">
@@ -478,11 +1022,21 @@
                         <div class="form-group">
                             <label><i class="fas fa-hashtag"></i> Cantidad</label>
                             <input type="number" name="cantidad" id="edit_cantidad" min="0" step="any">
+                            <p id="edit_cantidad_warning" class="help-text" style="color: #ea580c; display: none; font-weight: 700; margin-top: 6px; font-style: normal; line-height: 1.3;">
+                                <i class="fas fa-exclamation-triangle"></i> Solo administradores pueden cambiar la cantidad directamente. Para alterar el stock, registra una Entrada o Salida.
+                            </p>
                         </div>
                         <div class="form-group">
                             <label><i class="fas fa-dollar-sign"></i> Precio (Bs.)</label>
                             <input type="number" name="precio" id="edit_precio" min="0" step="0.01">
+                            <p id="edit_precio_warning" class="help-text" style="color: var(--danger); display: none; font-weight: 700; margin-top: 6px; font-style: normal; line-height: 1.3;">
+                                <i class="fas fa-exclamation-triangle"></i> Este artículo tiene múltiples lotes activos con diferentes precios. Los precios se gestionan mediante las entradas/lotes.
+                            </p>
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-sticky-note"></i> Observaciones / Notas <span style="font-weight:400; opacity:0.6;">(opcional)</span></label>
+                        <textarea name="notas" id="edit_notas" rows="2" style="resize:vertical; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 13px; background: var(--bg-input); color: var(--text-primary); width: 100%; font-family: inherit;" placeholder="Ej: Pieza con desgaste, revisar antes de usar..."></textarea>
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-success" style="flex:1; justify-content:center;">
@@ -709,14 +1263,52 @@
         document.getElementById('edit_grupo_nombre').value = nombreActual;
         document.getElementById('modalEditarGrupo').classList.add('active');
     }
-    function abrirModalEditar(id, codigo, nombre, unidad, grupo_id, cantidad, precio) {
+    function abrirModalEditar(id, codigo, nombre, unidad, grupo_id, cantidad, precio, tieneMultiplesPrecios, notas) {
         document.getElementById('formEditar').action = '/inventario/' + id;
         document.getElementById('edit_codigo').value = codigo;
         document.getElementById('edit_nombre').value = nombre;
         document.getElementById('edit_unidad').value = unidad;
         document.getElementById('edit_grupo_id').value = grupo_id;
         document.getElementById('edit_cantidad').value = cantidad;
-        document.getElementById('edit_precio').value = precio;
+        document.getElementById('edit_notas').value = notas || '';
+
+        const inputCantidad = document.getElementById('edit_cantidad');
+        const warningCantidad = document.getElementById('edit_cantidad_warning');
+        const esAdmin = {{ Auth::user()->esAdmin() ? 'true' : 'false' }};
+
+        if (!esAdmin) {
+            inputCantidad.readOnly = true;
+            inputCantidad.classList.add('input-readonly');
+            inputCantidad.style.background = 'rgba(0, 0, 0, 0.05)';
+            inputCantidad.style.color = '#718096';
+            inputCantidad.style.cursor = 'not-allowed';
+            if (warningCantidad) warningCantidad.style.display = 'block';
+        } else {
+            inputCantidad.readOnly = false;
+            inputCantidad.classList.remove('input-readonly');
+            inputCantidad.style.background = '';
+            inputCantidad.style.color = '';
+            inputCantidad.style.cursor = '';
+            if (warningCantidad) warningCantidad.style.display = 'none';
+        }
+
+        const inputPrecio = document.getElementById('edit_precio');
+        const warningPrecio = document.getElementById('edit_precio_warning');
+
+        if (tieneMultiplesPrecios) {
+            inputPrecio.value = '';
+            inputPrecio.readOnly = true;
+            inputPrecio.classList.add('input-readonly');
+            inputPrecio.placeholder = "Múltiples precios activos";
+            if (warningPrecio) warningPrecio.style.display = 'block';
+        } else {
+            inputPrecio.value = precio;
+            inputPrecio.readOnly = false;
+            inputPrecio.classList.remove('input-readonly');
+            inputPrecio.placeholder = "";
+            if (warningPrecio) warningPrecio.style.display = 'none';
+        }
+
         document.getElementById('modalEditar').classList.add('active');
     }
     function cerrarModales() {
@@ -845,5 +1437,76 @@
     function cerrarModalEliminarArticulo() {
         document.getElementById('modalEliminarArticulo').classList.remove('active');
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchInput = document.querySelector('input[name="buscar"]');
+        const groupSelect = document.querySelector('select[name="grupo"]');
+        const stockSelect = document.querySelector('select[name="stock"]');
+        const searchForm = document.querySelector('.filters');
+        
+        let debounceTimer;
+        
+        function performSearch() {
+            if (!searchForm) return;
+            const formData = new FormData(searchForm);
+            const params = new URLSearchParams(formData);
+            const url = searchForm.action + '?' + params.toString();
+            
+            // Update browser URL
+            window.history.replaceState({}, '', url);
+            
+            const wrapper = document.getElementById('inventario-table-wrapper');
+            if (wrapper) wrapper.style.opacity = '0.6';
+            
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Swap table wrapper
+                const newWrapper = doc.getElementById('inventario-table-wrapper');
+                if (wrapper && newWrapper) {
+                    wrapper.innerHTML = newWrapper.innerHTML;
+                    wrapper.style.opacity = '1';
+                }
+                
+                // Swap header stats
+                ['inventario-count', 'inventario-valor'].forEach(id => {
+                    const el = document.getElementById(id);
+                    const newEl = doc.getElementById(id);
+                    if (el && newEl) el.innerHTML = newEl.innerHTML;
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                if (wrapper) wrapper.style.opacity = '1';
+            });
+        }
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(performSearch, 250);
+            });
+            if (searchForm) {
+                searchForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    performSearch();
+                });
+            }
+        }
+        
+        if (groupSelect) {
+            groupSelect.addEventListener('change', performSearch);
+        }
+        if (stockSelect) {
+            stockSelect.addEventListener('change', performSearch);
+        }
+    });
 </script>
 @endpush

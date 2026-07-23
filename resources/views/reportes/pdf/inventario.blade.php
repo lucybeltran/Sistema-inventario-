@@ -5,20 +5,20 @@
     <title>Reporte de Inventario</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 10px; }
-        h1 { color: #667eea; font-size: 18px; margin-bottom: 5px; }
+        h1 { color: #1e293b; font-size: 18px; margin-bottom: 5px; }
         .subtitulo { color: #666; font-size: 11px; margin-bottom: 15px; }
         table { width: 100%; border-collapse: collapse; }
         th {
-            background: #667eea; color: white;
+            background: #1e293b; color: white;
             padding: 7px; text-align: left; font-size: 9px;
         }
         td { padding: 5px 7px; border-bottom: 1px solid #ddd; }
-        .codigo { font-weight: bold; color: #667eea; font-family: monospace; }
+        .codigo { font-weight: bold; color: #d97706; font-family: monospace; }
         .right { text-align: right; }
 
         /* Fila separadora de grupo */
         .grupo-separador td {
-            background: #764ba2;
+            background: #334155;
             color: white;
             font-weight: bold;
             font-size: 11px;
@@ -28,15 +28,15 @@
 
         /* Subtotal por grupo */
         .subtotal-row td {
-            background: #ede7f6;
-            color: #4a2c7a;
+            background: #f1f5f9;
+            color: #1e293b;
             font-weight: bold;
             font-size: 9px;
-            border-top: 1px solid #b39ddb;
+            border-top: 1px solid #cbd5e1;
         }
 
         .total-row td {
-            background: #2d3748;
+            background: #1e293b;
             color: white;
             font-weight: bold;
             font-size: 11px;
@@ -53,9 +53,20 @@
             <img src="{{ public_path('img/logo.png') }}" style="width:75px; height:auto;">
         </td>
         <td style="border:none; vertical-align:middle; padding-left:10px;">
-            <h1 style="margin:0;">Reporte de Inventario</h1>
+            <h1 style="margin:0; font-size: 20px;">
+                Reporte de Inventario
+                @if(isset($stockFilter))
+                    @if($stockFilter === 'con_stock')
+                        <span style="font-size:13px; font-weight:normal; color:#555;">(Solo con Stock)</span>
+                    @elseif($stockFilter === 'sin_stock')
+                        <span style="font-size:13px; font-weight:normal; color:#555;">(Solo sin Stock)</span>
+                    @else
+                        <span style="font-size:13px; font-weight:normal; color:#555;">(General)</span>
+                    @endif
+                @endif
+            </h1>
             <div class="subtitulo" style="margin-top:3px;">
-                Santa Catalina — Mina Tres Amigos<br>
+                Sección Catalina — Empresa Minera Torrez S.R.L.<br>
                 Generado: {{ now()->format('d/m/Y H:i') }}
             </div>
         </td>
@@ -84,7 +95,11 @@
 
             @foreach($articulos as $art)
                 @php
-                    $valorTotal = $art->precio * $art->cantidad;
+                    if (isset($preciosPorArticulo[$art->id]) && count($preciosPorArticulo[$art->id]) > 1) {
+                        $valorTotal = collect($preciosPorArticulo[$art->id])->sum(fn($p) => $p['precio'] * $p['cantidad']);
+                    } else {
+                        $valorTotal = $art->precio * $art->cantidad;
+                    }
                 @endphp
 
                 {{-- ¿Cambió de grupo? --}}
@@ -124,9 +139,34 @@
                     <td>{{ $art->nombre }}</td>
                     <td>{{ $art->grupo_id }}</td>
                     <td>{{ $art->unidad }}</td>
-                    <td class="right">{{ number_format($art->cantidad, 3) }}</td>
-                    <td class="right">{{ number_format($art->precio, 2) }}</td>
-                    <td class="right">{{ number_format($valorTotal, 2) }}</td>
+                    <td class="right">
+                        @if(isset($preciosPorArticulo[$art->id]) && count($preciosPorArticulo[$art->id]) > 1)
+                            @foreach($preciosPorArticulo[$art->id] as $p)
+                                <div style="font-size: 9.5px; line-height: 1.2;">{{ number_format($p['cantidad'], 3) }}</div>
+                            @endforeach
+                        @else
+                            {{ number_format($art->cantidad, 3) }}
+                        @endif
+                    </td>
+                    <td class="right">
+                        @if(isset($preciosPorArticulo[$art->id]) && count($preciosPorArticulo[$art->id]) > 1)
+                            @foreach($preciosPorArticulo[$art->id] as $p)
+                                <div style="font-size: 9.5px; line-height: 1.2;">{{ number_format($p['precio'], 2) }}</div>
+                            @endforeach
+                        @else
+                            {{ number_format($art->precio, 2) }}
+                        @endif
+                    </td>
+                    <td class="right">
+                        @if(isset($preciosPorArticulo[$art->id]) && count($preciosPorArticulo[$art->id]) > 1)
+                            @php $totValItem = 0; @endphp
+                            @foreach($preciosPorArticulo[$art->id] as $p)
+                                <div style="font-size: 9.5px; line-height: 1.2;">{{ number_format($p['precio'] * $p['cantidad'], 2) }}</div>
+                            @endforeach
+                        @else
+                            {{ number_format($valorTotal, 2) }}
+                        @endif
+                    </td>
                 </tr>
             @endforeach
 
@@ -149,7 +189,7 @@
     </table>
 
     <div class="footer">
-        Sistema de Gestión de Inventario — Santa Catalina, Mina Tres Amigos
+        Sistema de Gestión de Inventario — Sección Catalina, Empresa Minera Torrez S.R.L.
     </div>
 </body>
 </html>

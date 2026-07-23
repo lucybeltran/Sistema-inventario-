@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesión Expirada - Inventario Mina Tres Amigos</title>
+    <title>Sesión Expirada - Sección Catalina - Empresa Minera Torrez S.R.L.</title>
     <meta http-equiv="refresh" content="3;url={{ route('login') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -12,7 +12,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #090d16 0%, #111827 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -20,13 +20,16 @@
         }
 
         .card {
-            background: white;
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 20px;
             padding: 50px 40px;
             max-width: 450px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
             animation: aparecer 0.6s ease-out;
         }
 
@@ -39,48 +42,48 @@
             width: 90px;
             height: 90px;
             margin: 0 auto 25px;
-            background: linear-gradient(135deg, #f59f00 0%, #f76707 100%);
+            background: linear-gradient(135deg, #f97316 0%, #eab308 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-size: 40px;
-            box-shadow: 0 10px 25px rgba(245, 159, 0, 0.4);
+            box-shadow: 0 10px 25px rgba(249, 115, 22, 0.3);
         }
 
         h1 {
-            color: #2d3748;
+            color: #f8fafc;
             font-size: 24px;
             margin-bottom: 10px;
         }
 
         .subtitulo {
-            color: #718096;
+            color: #cbd5e1;
             font-size: 14px;
             margin-bottom: 25px;
             line-height: 1.5;
         }
 
         .info-box {
-            background: #fff8e1;
-            border-left: 4px solid #f59f00;
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid #f97316;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 25px;
             text-align: left;
-            color: #7c2d12;
+            color: #ffedd5;
             font-size: 13px;
             line-height: 1.5;
         }
 
         .info-box i {
-            color: #f59f00;
+            color: #eab308;
             margin-right: 8px;
         }
 
         .countdown {
-            color: #667eea;
+            color: #f97316;
             font-size: 13px;
             margin-bottom: 20px;
         }
@@ -95,18 +98,19 @@
             align-items: center;
             gap: 8px;
             padding: 12px 28px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f97316 0%, #eab308 100%);
             color: white;
             border-radius: 10px;
             text-decoration: none;
             font-weight: 600;
             font-size: 14px;
             transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
         }
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 25px rgba(249, 115, 22, 0.4);
         }
     </style>
 </head>

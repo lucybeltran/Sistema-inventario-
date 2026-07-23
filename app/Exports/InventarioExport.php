@@ -19,13 +19,48 @@ class InventarioExport implements FromArray, WithHeadings, WithTitle, WithColumn
     protected $filasSeparadoras = []; // guarda en qué número de fila va un separador
     protected $totalCantidad = 0;
     protected $totalValor = 0;
+    protected $stockFilter;
+    protected $grupoId;
+
+    public function __construct($stockFilter = 'todos', $grupoId = 'todos')
+    {
+        $this->stockFilter = $stockFilter;
+        $this->grupoId = $grupoId;
+    }
 
     public function array(): array
     {
-        $articulos = Articulo::with('grupo')
-            ->orderByRaw('CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(codigo, "/", 1), "-", -1) AS UNSIGNED)')
+        $query = Articulo::with('grupo');
+        if ($this->stockFilter === 'con_stock') {
+            $query->where('cantidad', '>', 0);
+        } elseif ($this->stockFilter === 'sin_stock') {
+            $query->where('cantidad', '<=', 0);
+        }
+
+        if ($this->grupoId && $this->grupoId !== 'todos') {
+            $query->where('grupo_id', $this->grupoId);
+        }
+
+        $articulos = $query->orderByRaw('CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(codigo, "/", 1), "-", -1) AS UNSIGNED)')
             ->orderByRaw('CAST(SUBSTRING_INDEX(codigo, "/", -1) AS UNSIGNED)')
             ->get();
+
+        // Calcular lotes activos y precios por artículo
+        $lotesActivos = \App\Models\Movimiento::where('tipo', 'entrada')
+            ->where('cantidad_restante', '>', 0)
+            ->whereNotNull('precio_unitario')
+            ->orderBy('created_at', 'asc')
+            ->get(['articulo_id', 'precio_unitario', 'cantidad_restante', 'created_at'])
+            ->groupBy('articulo_id');
+
+        $preciosPorArticulo = $lotesActivos->map(function ($movs) {
+            return $movs->groupBy(fn($m) => number_format($m->precio_unitario, 2))
+                ->map(fn($g) => [
+                    'precio'   => $g->first()->precio_unitario,
+                    'cantidad' => $g->sum('cantidad_restante'),
+                ])
+                ->values();
+        });
 
         $datos = [];
         $grupoActual = null;
@@ -47,7 +82,28 @@ class InventarioExport implements FromArray, WithHeadings, WithTitle, WithColumn
             }
 
             $numeroFila++;
-            $valorTotal = $art->precio * $art->cantidad;
+            
+            if (isset($preciosPorArticulo[$art->id]) && count($preciosPorArticulo[$art->id]) > 1) {
+                $cantidadesStr = [];
+                $preciosStr = [];
+                $totalesStr = [];
+                $valorTotal = 0;
+                foreach ($preciosPorArticulo[$art->id] as $p) {
+                    $cantidadesStr[] = number_format($p['cantidad'], 3);
+                    $preciosStr[] = number_format($p['precio'], 2);
+                    $totValItem = $p['precio'] * $p['cantidad'];
+                    $totalesStr[] = number_format($totValItem, 2);
+                    $valorTotal += $totValItem;
+                }
+                $cantVal = implode("\n", $cantidadesStr);
+                $precVal = implode("\n", $preciosStr);
+                $totVal = implode("\n", $totalesStr);
+            } else {
+                $valorTotal = $art->precio * $art->cantidad;
+                $cantVal = (float) $art->cantidad;
+                $precVal = (float) $art->precio;
+                $totVal = (float) $valorTotal;
+            }
 
             $datos[] = [
                 $art->codigo,
@@ -55,9 +111,9 @@ class InventarioExport implements FromArray, WithHeadings, WithTitle, WithColumn
                 $art->grupo_id,
                 $art->grupo->nombre ?? '',
                 $art->unidad,
-                (float) $art->cantidad,
-                (float) $art->precio,
-                (float) $valorTotal,
+                $cantVal,
+                $precVal,
+                $totVal,
             ];
 
             $this->totalCantidad += $art->cantidad;
@@ -122,7 +178,7 @@ class InventarioExport implements FromArray, WithHeadings, WithTitle, WithColumn
                 // ===== ENCABEZADO =====
                 $sheet->getStyle('A1:H1')->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '667EEA']],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1E293B']],
                     'alignment' => ['vertical' => Alignment::VERTICAL_CENTER, 'horizontal' => Alignment::HORIZONTAL_CENTER],
                 ]);
                 $sheet->getRowDimension(1)->setRowHeight(26);
@@ -137,12 +193,26 @@ class InventarioExport implements FromArray, WithHeadings, WithTitle, WithColumn
                     ],
                 ]);
 
+                // ===== COLORES BAJITOS EN COLUMNAS NUMÉRICAS =====
+                // Cantidad (F): Verde claro muy suave
+                $sheet->getStyle("F2:F".($ultimaFila - 1))->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F0FDF4']],
+                ]);
+                // Precio (G): Azul claro muy suave
+                $sheet->getStyle("G2:G".($ultimaFila - 1))->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EFF6FF']],
+                ]);
+                // Valor Total (H): Púrpura/violeta claro muy suave
+                $sheet->getStyle("H2:H".($ultimaFila - 1))->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F5F3FF']],
+                ]);
+
                 // ===== FILAS SEPARADORAS DE GRUPO =====
                 foreach ($this->filasSeparadoras as $filaSep) {
                     $sheet->mergeCells("A{$filaSep}:H{$filaSep}");
                     $sheet->getStyle("A{$filaSep}:H{$filaSep}")->applyFromArray([
                         'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
-                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '764BA2']],
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '475569']],
                         'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
                     ]);
                     $sheet->getRowDimension($filaSep)->setRowHeight(22);
@@ -155,6 +225,10 @@ class InventarioExport implements FromArray, WithHeadings, WithTitle, WithColumn
                       ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle("E2:E{$ultimaFila}")
                       ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                // Habilitar wrapText y alineación vertical centrado
+                $sheet->getStyle("F2:H{$ultimaFila}")->getAlignment()->setWrapText(true);
+                $sheet->getStyle("A2:H{$ultimaFila}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
 
                 // ===== FORMATO de números =====
                 // Cantidad con 3 decimales

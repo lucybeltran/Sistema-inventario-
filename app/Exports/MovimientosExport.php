@@ -18,46 +18,70 @@ class MovimientosExport implements FromArray, WithHeadings, WithTitle, WithColum
     protected $desde;
     protected $hasta;
     protected $trabajadorId;
+    protected $tipo;
+    protected $incluirInicial;
+    protected $articuloId;
 
     protected $filas = [];
     protected $totalMovimientos = 0;
     protected $totalEntradas = 0;
     protected $totalSalidas = 0;
+    protected $sumaCantidad = 0;
+    protected $sumaTotalValores = 0;
     protected $filaTotales = 0;
 
-    public function __construct($desde = null, $hasta = null, $trabajadorId = null)
+    public function __construct($desde = null, $hasta = null, $trabajadorId = null, $tipo = null, $incluirInicial = false, $articuloId = null)
     {
-        $this->desde = $desde;
-        $this->hasta = $hasta;
-        $this->trabajadorId = $trabajadorId;
+        $this->desde         = $desde;
+        $this->hasta         = $hasta;
+        $this->trabajadorId  = $trabajadorId;
+        $this->tipo          = $tipo;
+        $this->incluirInicial = $incluirInicial;
+        $this->articuloId    = $articuloId;
     }
 
     public function array(): array
     {
         $query = Movimiento::with(['articulo', 'user', 'trabajador']);
 
-        if ($this->desde) {
-            $query->whereDate('fecha', '>=', $this->desde);
-        }
-        if ($this->hasta) {
-            $query->whereDate('fecha', '<=', $this->hasta);
-        }
-        if ($this->trabajadorId) {
-            $query->where('trabajador_id', $this->trabajadorId);
+        if ($this->desde)       $query->whereDate('fecha', '>=', $this->desde);
+        if ($this->hasta)       $query->whereDate('fecha', '<=', $this->hasta);
+        if ($this->trabajadorId) $query->where('trabajador_id', $this->trabajadorId);
+        if ($this->tipo)        $query->where('tipo', $this->tipo);
+        if ($this->articuloId)  $query->where('articulo_id', $this->articuloId);
+        if (!$this->incluirInicial) {
+            $query->where(function ($q) {
+                $q->where('tipo', 'salida')
+                  ->orWhere(function ($sub) {
+                      $sub->where('tipo', 'entrada')
+                          ->where('notas', 'not like', 'Stock inicial%')
+                          ->where(function ($qq) {
+                              $qq->whereNull('entregado_por')
+                                 ->orWhere('entregado_por', '!=', 'CARGA EXCEL');
+                          });
+                  });
+            });
         }
 
-        $movimientos = $query->orderByRaw('CAST(numero_nota AS UNSIGNED) DESC')->get();
+        // Ordenar cronológicamente para reportes claros
+        $movimientos = $query->orderBy('fecha', 'asc')->orderBy('created_at', 'asc')->get();
 
         $datos = [];
         foreach ($movimientos as $mov) {
-            $nombreTrabajador = $mov->trabajador?->nombre ?? $mov->trabajador_nombre ?? '—';
-            $ciTrabajador = $mov->trabajador?->ci ?? '—';
+            if ($mov->tipo === 'entrada') {
+                $personalEntrega = ($mov->entregado_por ?? '—') . ' a ' . ($mov->recibido_por ?? $mov->user->name ?? 'Almacén');
+            } else {
+                $nombreTrabajador = $mov->trabajador?->nombre ?? $mov->trabajador_nombre ?? '—';
+                $entregador = $mov->entregado_por ? $mov->entregado_por . ' a ' : '';
+                $turnoStr = $mov->turno ? " ({$mov->turno})" : '';
+                $personalEntrega = $entregador . $nombreTrabajador . $turnoStr;
+            }
             $precioUnit = (float) ($mov->precio_unitario ?? 0);
             $total = $precioUnit * $mov->cantidad;
 
             $datos[] = [
                 $mov->numero_nota ?? '—',
-                $mov->fecha->format('d/m/Y'),
+                $mov->fecha ? \Carbon\Carbon::parse($mov->fecha)->format('d/m/Y') : $mov->created_at->format('d/m/Y H:i'),
                 $mov->articulo->codigo,
                 $mov->articulo->nombre,
                 strtoupper($mov->tipo),
@@ -65,13 +89,15 @@ class MovimientosExport implements FromArray, WithHeadings, WithTitle, WithColum
                 $mov->articulo->unidad,
                 $precioUnit,
                 $total,
-                $nombreTrabajador,
-                $ciTrabajador,
+                $personalEntrega,
                 $mov->notas ?? '',
                 $mov->user->name ?? '—',
             ];
 
             $this->totalMovimientos++;
+            $this->sumaCantidad += $mov->cantidad;
+            $this->sumaTotalValores += $total;
+
             if ($mov->tipo === 'entrada') {
                 $this->totalEntradas++;
             } else {
@@ -86,7 +112,11 @@ class MovimientosExport implements FromArray, WithHeadings, WithTitle, WithColum
             '',
             "{$this->totalEntradas} entradas",
             "{$this->totalSalidas} salidas",
-            '', '', '', '', '', '', '', '',
+            (float) $this->sumaCantidad,
+            '',
+            '',
+            (float) $this->sumaTotalValores,
+            '', '', '',
         ];
         $this->filaTotales = count($datos) + 1; // +1 por el encabezado
 
@@ -106,8 +136,7 @@ class MovimientosExport implements FromArray, WithHeadings, WithTitle, WithColum
             'UNIDAD',
             'PRECIO UNIT. (Bs.)',
             'TOTAL (Bs.)',
-            'ENTREGADO A',
-            'CI TRABAJADOR',
+            'PERSONAL / ENTREGA',
             'NOTAS',
             'REGISTRADO POR',
         ];
@@ -122,7 +151,7 @@ class MovimientosExport implements FromArray, WithHeadings, WithTitle, WithColum
     {
         return [
             'A' => 12, 'B' => 13, 'C' => 13, 'D' => 32, 'E' => 12,
-            'F' => 12, 'G' => 12, 'H' => 14, 'I' => 14, 'J' => 24, 'K' => 15, 'L' => 28, 'M' => 20,
+            'F' => 12, 'G' => 12, 'H' => 14, 'I' => 14, 'J' => 35, 'K' => 28, 'L' => 20,
         ];
     }
 
@@ -136,15 +165,15 @@ class MovimientosExport implements FromArray, WithHeadings, WithTitle, WithColum
                 $ultimaFilaDatos = $ultimaFila - 1; // sin contar la fila de totales
 
                 // ===== ENCABEZADO =====
-                $sheet->getStyle('A1:M1')->applyFromArray([
+                $sheet->getStyle('A1:L1')->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '667EEA']],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1E293B']],
                     'alignment' => ['vertical' => Alignment::VERTICAL_CENTER, 'horizontal' => Alignment::HORIZONTAL_CENTER],
                 ]);
                 $sheet->getRowDimension(1)->setRowHeight(26);
 
                 // ===== BORDES =====
-                $sheet->getStyle("A1:M{$ultimaFila}")->applyFromArray([
+                $sheet->getStyle("A1:L{$ultimaFila}")->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
@@ -156,11 +185,25 @@ class MovimientosExport implements FromArray, WithHeadings, WithTitle, WithColum
                 // ===== FILAS ALTERNADAS =====
                 for ($fila = 2; $fila <= $ultimaFilaDatos; $fila++) {
                     if ($fila % 2 == 0) {
-                        $sheet->getStyle("A{$fila}:M{$fila}")->applyFromArray([
+                        $sheet->getStyle("A{$fila}:L{$fila}")->applyFromArray([
                             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F5F6FA']],
                         ]);
                     }
                 }
+
+                // ===== COLORES BAJITOS EN COLUMNAS NUMÉRICAS =====
+                // Cantidad (F): Verde claro muy suave
+                $sheet->getStyle("F2:F{$ultimaFilaDatos}")->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F0FDF4']],
+                ]);
+                // Precio Unitario (H): Azul claro muy suave
+                $sheet->getStyle("H2:H{$ultimaFilaDatos}")->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EFF6FF']],
+                ]);
+                // Total (I): Púrpura/violeta claro muy suave
+                $sheet->getStyle("I2:I{$ultimaFilaDatos}")->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F5F3FF']],
+                ]);
 
                 // ===== ALINEACIÓN =====
                 $sheet->getStyle("A2:A{$ultimaFilaDatos}")
@@ -171,15 +214,15 @@ class MovimientosExport implements FromArray, WithHeadings, WithTitle, WithColum
                       ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                 // ===== FORMATO de cantidad =====
-                $sheet->getStyle("F2:F{$ultimaFilaDatos}")
+                $sheet->getStyle("F2:F{$filaTotales}")
                       ->getNumberFormat()->setFormatCode('#,##0.000');
-                $sheet->getStyle("H2:I{$ultimaFilaDatos}")
+                $sheet->getStyle("H2:I{$filaTotales}")
                       ->getNumberFormat()->setFormatCode('#,##0.00');
-                $sheet->getStyle("H2:I{$ultimaFilaDatos}")
+                $sheet->getStyle("H2:I{$filaTotales}")
                       ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
                 // ===== FILA DE TOTALES =====
-                $sheet->getStyle("A{$filaTotales}:M{$filaTotales}")->applyFromArray([
+                $sheet->getStyle("A{$filaTotales}:L{$filaTotales}")->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
                     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2D3748']],
                     'alignment' => ['vertical' => Alignment::VERTICAL_CENTER, 'horizontal' => Alignment::HORIZONTAL_CENTER],

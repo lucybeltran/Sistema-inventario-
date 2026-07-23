@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -26,13 +27,29 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        
+        $user->fill($request->safe()->except('foto_perfil'));
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        // Subida de foto de perfil si está presente
+        if ($request->hasFile('foto_perfil')) {
+            $file = $request->file('foto_perfil');
+            
+            // Eliminar foto de perfil anterior si existía
+            if ($user->foto_perfil) {
+                Storage::disk('public')->delete($user->foto_perfil);
+            }
+
+            // Guardar nueva imagen
+            $path = $file->store('avatars', 'public');
+            $user->foto_perfil = $path;
+        }
+
+        $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -56,5 +73,21 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    /**
+     * Limpia el historial de inicios de sesión del usuario actual, conservando únicamente la sesión actual.
+     */
+    public function limpiarAccesos(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        
+        // Eliminar todos los registros
+        $user->iniciosSesion()->delete();
+
+        // Volver a registrar la sesión actual
+        \App\Models\InicioSesion::registrarInicioSesion($user);
+
+        return Redirect::route('profile.edit')->with('success', 'El historial de dispositivos y accesos se ha limpiado correctamente.');
     }
 }

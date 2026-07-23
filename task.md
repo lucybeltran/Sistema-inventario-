@@ -1,0 +1,12 @@
+- [x] Implementar SweetAlert2 en `galeria/index.blade.php` para confirmación de eliminar en pantalla
+- [x] Ampliar historial del trabajador en `reportes/trabajador.blade.php` (Fecha y Hora, P. Unitario, P. Total)
+- [x] Ampliar e integrar historial del trabajador en PDF (`reportes/pdf/trabajador.blade.php`) y en Excel (`MovimientosExport.php`)
+- [x] Rediseñar botones de clasificación en `inventario/rotacion.blade.php` con azul opaco `.btn-mover`
+- [x] Limpiar colores morados en el resto de los archivos PDF (`pdf/inventario.blade.php`, `pdf/kardex.blade.php`, `pdf/movimientos.blade.php`, `pdf/rotacion.blade.php`)
+- [x] Limpiar caché de vistas de Laravel y verificar en vivo
+- [x] Dividir sector de movimientos en dos enlaces en la barra lateral: "Movimiento de Entrada" y "Movimiento de Salida"
+- [x] Añadir pestañas de filtro en tiempo real en la página de movimientos ("Todos los Movimientos", "Movimientos de Entrada", "Movimientos de Salida")
+- [x] Mostrar fecha y hora en tiempo real (`created_at`) en todas las tablas y reportes de movimientos (Index, PDF, Excel, Dashboard, Kardex)
+- [x] Limpiar color morado de cabeceras en los archivos de exportación Excel (`InventarioExport.php`, `KardexExport.php`, `RotacionExport.php`)
+- [x] Mostrar únicamente el botón "Registrar Entrada" al estar en la pestaña de Entradas, y únicamente el botón "Registrar Salida" al estar en la pestaña de Salidas
+- [x] Verificar manualmente todos los cambios.

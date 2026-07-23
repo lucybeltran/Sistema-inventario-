@@ -10,11 +10,16 @@ class Trabajador extends Model
     protected $table = 'trabajadores';
 
     protected $fillable = [
+        'codigo',
         'nombre',
         'ci',
         'cargo',
+        'nivel',
+        'labor',
+        'area_trabajo',
         'telefono',
         'activo',
+        'ayudante',
     ];
 
     protected $casts = [

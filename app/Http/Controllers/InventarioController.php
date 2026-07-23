@@ -48,15 +48,50 @@ class InventarioController extends Controller
         $grupos = Grupo::orderByRaw('CAST(SUBSTRING(id, 3) AS UNSIGNED)')->get();
         $total = Articulo::count();
 
-        // Valor total del inventario (precio * cantidad de todos)
+        // Valor total del inventario = SUM(precio x cantidad) directo de la tabla articulos
+        // (no depende de los lotes de movimientos, refleja siempre el saldo real del almacén)
         $valorInventario = Articulo::selectRaw('SUM(precio * cantidad) as total')->value('total') ?? 0;
 
-        return view('inventario.index', compact('articulos', 'grupos', 'total', 'valorInventario'));
+        // Lotes activos (cantidad_restante > 0) agrupados por artículo — para precios PEPS
+        $lotesActivos = \App\Models\Movimiento::where('tipo', 'entrada')
+            ->where('cantidad_restante', '>', 0)
+            ->whereNotNull('precio_unitario')
+            ->orderBy('created_at', 'asc')
+            ->get(['articulo_id', 'precio_unitario', 'cantidad_restante', 'created_at'])
+            ->groupBy('articulo_id');
+
+        // Por artículo: lotes agrupados por precio
+        $preciosPorArticulo = $lotesActivos->map(function ($movs) {
+            return $movs->groupBy(fn($m) => number_format($m->precio_unitario, 2))
+                ->map(fn($g) => [
+                    'precio'   => $g->first()->precio_unitario,
+                    'cantidad' => $g->sum('cantidad_restante'),
+                    'primera'  => $g->first()->created_at->format('d/m/Y'),
+                    'ultima'   => $g->last()->created_at->format('d/m/Y'),
+                ])
+                ->values();
+        });
+
+        // Valor por artículo desde lotes (si hay); si no, usa precio x cantidad del artículo
+        $valorPorArticulo = collect();
+        foreach ($articulos as $art) {
+            if (isset($lotesActivos[$art->id])) {
+                $valorPorArticulo[$art->id] = $lotesActivos[$art->id]
+                    ->sum(fn($l) => $l->cantidad_restante * $l->precio_unitario);
+            } else {
+                $valorPorArticulo[$art->id] = $art->precio * $art->cantidad;
+            }
+        }
+
+        return view('inventario.index', compact('articulos', 'grupos', 'total', 'valorInventario', 'preciosPorArticulo', 'valorPorArticulo'));
+
     }
 
     public function store(Request $request)
     {
-        $this->verificarAdmin();
+        if (!auth()->user()->puedeEditar()) {
+            abort(403, 'No tienes permisos para realizar esta acción.');
+        }
 
         $request->validate([
             'codigo' => 'required|string|max:20|unique:articulos,codigo',
@@ -65,6 +100,8 @@ class InventarioController extends Controller
             'grupo_id' => 'required|exists:grupos,id',
             'cantidad' => 'nullable|numeric|min:0',
             'precio' => 'nullable|numeric|min:0',
+            'rotacion' => 'nullable|string|in:diario,consumible,ocasional,prestamo',
+            'stock_minimo' => 'nullable|numeric|min:0',
         ], [
             'codigo.required' => 'El código es obligatorio.',
             'codigo.unique' => 'Este código ya existe. Usa otro.',
@@ -73,6 +110,8 @@ class InventarioController extends Controller
             'grupo_id.required' => 'Debes seleccionar un grupo.',
             'precio.numeric' => 'El precio debe ser un número.',
             'precio.min' => 'El precio no puede ser negativo.',
+            'stock_minimo.numeric' => 'El stock mínimo debe ser un número.',
+            'stock_minimo.min' => 'El stock mínimo no puede ser negativo.',
         ]);
 
         // Validación: decimales según la unidad
@@ -85,14 +124,22 @@ class InventarioController extends Controller
             }
         }
 
-        Articulo::create([
+        $articulo = Articulo::create([
             'codigo' => strtoupper($request->codigo),
             'nombre' => strtoupper($request->nombre),
             'unidad' => strtoupper($request->unidad),
             'grupo_id' => $request->grupo_id,
             'cantidad' => $request->cantidad ?? 0,
             'precio' => $request->precio ?? 0,
+            'rotacion' => $request->rotacion ?? 'ocasional',
+            'stock_minimo' => $request->stock_minimo ?? 0,
+            'notas' => $request->notas ?? null,
         ]);
+
+        \App\Models\AuditoriaLog::registrar(
+            'CREACION_ARTICULO',
+            "Creó el artículo " . strtoupper($request->codigo) . " — " . strtoupper($request->nombre) . ". Stock inicial: " . ($request->cantidad ?? 0) . " " . strtoupper($request->unidad) . ". Stock mínimo: " . ($request->stock_minimo ?? 0) . "."
+        );
 
         return back()
                          ->with('success', "Artículo '{$request->codigo}' creado correctamente.");
@@ -100,7 +147,27 @@ class InventarioController extends Controller
 
     public function update(Request $request, Articulo $articulo)
     {
-        $this->verificarAdmin();
+        if (!auth()->user()->puedeEditarMateriales()) {
+            abort(403, 'No tienes permiso para editar materiales del inventario.');
+        }
+
+        // Si no es administrador, no puede cambiar la cantidad (stock)
+        if (!auth()->user()->esAdmin()) {
+            $request->merge(['cantidad' => $articulo->cantidad]);
+        }
+
+        // Verificar si el artículo tiene múltiples precios activos
+        $preciosActivos = \App\Models\Movimiento::where('articulo_id', $articulo->id)
+            ->where('tipo', 'entrada')
+            ->where('cantidad_restante', '>', 0)
+            ->whereNotNull('precio_unitario')
+            ->distinct()
+            ->pluck('precio_unitario');
+
+        if ($preciosActivos->count() > 1) {
+            return redirect()->back()->withInput()
+                ->with('error', "No se puede editar este artículo porque cuenta con múltiples lotes activos a diferentes precios. Los precios y el stock deben gestionarse a través de los movimientos correspondientes.");
+        }
 
         $request->validate([
             'codigo' => 'required|string|max:20|unique:articulos,codigo,' . $articulo->id,
@@ -109,6 +176,8 @@ class InventarioController extends Controller
             'grupo_id' => 'required|exists:grupos,id',
             'cantidad' => 'nullable|numeric|min:0',
             'precio' => 'nullable|numeric|min:0',
+            'rotacion' => 'nullable|string|in:diario,consumible,ocasional,prestamo',
+            'stock_minimo' => 'nullable|numeric|min:0',
         ]);
 
         // Validación: decimales según la unidad
@@ -121,6 +190,9 @@ class InventarioController extends Controller
             }
         }
 
+        $notasAnteriores = $articulo->notas;
+        $notasNuevas = $request->notas ?? null;
+
         $articulo->update([
             'codigo' => strtoupper($request->codigo),
             'nombre' => strtoupper($request->nombre),
@@ -128,7 +200,38 @@ class InventarioController extends Controller
             'grupo_id' => $request->grupo_id,
             'cantidad' => $request->cantidad ?? $articulo->cantidad,
             'precio' => $request->precio ?? $articulo->precio,
+            'rotacion' => $request->rotacion ?? $articulo->rotacion ?? 'ocasional',
+            'stock_minimo' => $request->stock_minimo ?? $articulo->stock_minimo ?? 0,
+            'notas' => $notasNuevas,
         ]);
+
+        if ($notasAnteriores !== $notasNuevas) {
+            $editadoPor = auth()->user()->name;
+            $articuloNombre = $articulo->nombre;
+            
+            $admins = \App\Models\User::where('rol', 'admin')->get();
+            foreach ($admins as $admin) {
+                if ($admin->id === auth()->id()) continue;
+                
+                \App\Models\Notificacion::create([
+                    'user_id' => $admin->id,
+                    'titulo' => 'Nota de Material Editada',
+                    'mensaje' => "El usuario {$editadoPor} actualizó la nota/observación del material {$articuloNombre}: '" . ($notasNuevas ?? 'sin nota') . "'",
+                ]);
+            }
+        }
+
+        $cambios = [];
+        foreach ($articulo->getChanges() as $key => $val) {
+            $cambios[] = "$key: $val";
+        }
+        $cambiosTexto = implode(', ', $cambios);
+        if (!empty($cambiosTexto)) {
+            \App\Models\AuditoriaLog::registrar(
+                'MODIFICACION_ARTICULO',
+                "Modificó el artículo {$articulo->codigo}. Cambios: {$cambiosTexto}."
+            );
+        }
 
         return back()
                          ->with('success', "Artículo '{$articulo->codigo}' actualizado correctamente.");
@@ -149,7 +252,13 @@ class InventarioController extends Controller
         }
 
         $codigo = $articulo->codigo;
+        $nombre = $articulo->nombre;
         $articulo->delete();
+
+        \App\Models\AuditoriaLog::registrar(
+            'ELIMINACION_ARTICULO',
+            "Eliminó el artículo {$codigo} — {$nombre}."
+        );
 
         return back()
                          ->with('success', "Artículo '{$codigo}' eliminado correctamente.");
@@ -171,6 +280,11 @@ class InventarioController extends Controller
             'id' => strtoupper($request->id),
             'nombre' => strtoupper($request->nombre),
         ]);
+
+        \App\Models\AuditoriaLog::registrar(
+            'CREACION_GRUPO',
+            "Creó el grupo de artículos: " . strtoupper($request->id) . " — " . strtoupper($request->nombre) . "."
+        );
 
         return back()
                          ->with('success', "Grupo '{$request->id}' creado correctamente.");
@@ -196,6 +310,11 @@ class InventarioController extends Controller
             'nombre' => strtoupper($request->nombre),
         ]);
 
+        \App\Models\AuditoriaLog::registrar(
+            'MODIFICACION_GRUPO',
+            "Modificó el nombre del grupo {$grupo->id}: '{$nombreAnterior}' → '{$grupo->nombre}'."
+        );
+
         return back()
                          ->with('success', "Grupo '{$grupo->id}' actualizado: '{$nombreAnterior}' → '{$grupo->nombre}'.");
     }
@@ -217,7 +336,13 @@ class InventarioController extends Controller
         }
 
         $nombreGrupo = $grupo->nombre;
+        $idGrupo = $grupo->id;
         $grupo->delete();
+
+        \App\Models\AuditoriaLog::registrar(
+            'ELIMINACION_GRUPO',
+            "Eliminó el grupo {$idGrupo} — {$nombreGrupo}."
+        );
 
         return back()
             ->with('success', "Grupo \"{$nombreGrupo}\" eliminado correctamente.");
@@ -254,4 +379,97 @@ class InventarioController extends Controller
         $codigoSugerido = $grupo_id . '/' . str_pad($numero, 4, '0', STR_PAD_LEFT);
 
         return response()->json(['codigo' => $codigoSugerido]);
-    }}
+    }
+
+    /**
+     * Vista de gestión manual de la rotación/uso de materiales.
+     */
+    public function rotacionIndex(Request $request)
+    {
+        $tab = $request->input('tab', 'diario');
+        $query = Articulo::with('grupo');
+
+        if ($tab === 'diario') {
+            $query->whereIn('rotacion', ['diario', 'consumible']);
+        } elseif ($tab === 'prestamo') {
+            $query->where('rotacion', 'prestamo');
+        } else {
+            $query->where(function($q) {
+                $q->where('rotacion', 'ocasional')
+                  ->orWhereNull('rotacion')
+                  ->orWhere('rotacion', '');
+            });
+        }
+
+        if ($request->filled('buscar')) {
+            $termino = $request->buscar;
+            $query->where(function ($q) use ($termino) {
+                $q->where('codigo', 'LIKE', "%{$termino}%")
+                  ->orWhere('nombre', 'LIKE', "%{$termino}%");
+            });
+        }
+
+        if ($request->filled('grupo')) {
+            $query->where('grupo_id', $request->grupo);
+        }
+
+        $articulos = $query
+            ->orderByRaw('CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(codigo, "/", 1), "-", -1) AS UNSIGNED)')
+            ->orderByRaw('CAST(SUBSTRING_INDEX(codigo, "/", -1) AS UNSIGNED)')
+            ->paginate(30)
+            ->withQueryString();
+
+        $totalDiario = Articulo::whereIn('rotacion', ['diario', 'consumible'])->count();
+        $totalOcasional = Articulo::where(function($q) {
+            $q->where('rotacion', 'ocasional')
+              ->orWhereNull('rotacion')
+              ->orWhere('rotacion', '');
+        })->count();
+        $totalPrestamo = Articulo::where('rotacion', 'prestamo')->count();
+
+        $grupos = Grupo::orderByRaw('CAST(SUBSTRING(id, 3) AS UNSIGNED)')->get();
+
+        // Calcular lotes activos y precios por artículo
+        $lotesActivos = \App\Models\Movimiento::where('tipo', 'entrada')
+            ->where('cantidad_restante', '>', 0)
+            ->whereNotNull('precio_unitario')
+            ->orderBy('created_at', 'asc')
+            ->get(['articulo_id', 'precio_unitario', 'cantidad_restante', 'created_at'])
+            ->groupBy('articulo_id');
+
+        $preciosPorArticulo = $lotesActivos->map(function ($movs) {
+            return $movs->groupBy(fn($m) => number_format($m->precio_unitario, 2))
+                ->map(fn($g) => [
+                    'precio'   => $g->first()->precio_unitario,
+                    'cantidad' => $g->sum('cantidad_restante'),
+                    'primera'  => $g->first()->created_at->format('d/m/Y'),
+                    'ultima'   => $g->last()->created_at->format('d/m/Y'),
+                ])
+                ->values();
+        });
+
+        return view('inventario.rotacion', compact('articulos', 'tab', 'totalDiario', 'totalOcasional', 'totalPrestamo', 'grupos', 'preciosPorArticulo'));
+    }
+
+    /**
+     * Método rápido para cambiar la rotación de un artículo.
+     */
+    public function cambiarRotacion(Articulo $articulo, Request $request)
+    {
+        $request->validate([
+            'rotacion' => 'required|in:diario,consumible,ocasional,prestamo',
+        ]);
+
+        $articulo->rotacion = $request->rotacion;
+        $articulo->save();
+
+        $rotMap = [
+            'diario' => 'Consumible',
+            'consumible' => 'Consumible',
+            'ocasional' => 'Repuesto / Reserva',
+            'prestamo' => 'Equipo / Herramienta',
+        ];
+        $rot = $rotMap[$request->rotacion] ?? 'Clasificado';
+        return back()->with('success', "Clasificación de '{$articulo->codigo}' actualizada a '{$rot}'.");
+    }
+}

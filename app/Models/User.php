@@ -15,6 +15,15 @@ class User extends Authenticatable
         'email',
         'rol',
         'password',
+        'permiso_almacen',
+        'permiso_reportes',
+        'permiso_editar_movimientos',
+        'permiso_editar_materiales',
+        'activo',
+        'foto_perfil',
+        'permitir_cambio_password',
+        'intentos_fallidos',
+        'bloqueado_hasta',
     ];
 
     protected $hidden = [
@@ -27,11 +36,18 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'permiso_almacen' => 'boolean',
+            'permiso_reportes' => 'boolean',
+            'permiso_editar_movimientos' => 'boolean',
+            'permiso_editar_materiales' => 'boolean',
+            'activo' => 'boolean',
+            'permitir_cambio_password' => 'boolean',
+            'bloqueado_hasta' => 'datetime',
         ];
     }
 
     // ============================================
-    // HELPERS DE ROL
+    // HELPERS DE ROL Y PERMISOS
     // ============================================
 
     public function esAdmin(): bool
@@ -49,13 +65,19 @@ class User extends Authenticatable
         return $this->rol === 'reportes';
     }
 
-    /**
-     * Puede modificar inventario (artículos, grupos, movimientos, trabajadores)?
-     * Admin y Almacenero pueden.
-     */
     public function puedeEditar(): bool
     {
-        return in_array($this->rol, ['admin', 'almacenero']);
+        return $this->esAdmin() || (bool)$this->permiso_almacen;
+    }
+
+    public function puedeEditarMovimientos(): bool
+    {
+        return $this->esAdmin() || (bool)$this->permiso_editar_movimientos;
+    }
+
+    public function puedeEditarMateriales(): bool
+    {
+        return $this->esAdmin() || (bool)$this->permiso_editar_materiales;
     }
 
     /**
@@ -64,7 +86,7 @@ class User extends Authenticatable
      */
     public function puedeReportes(): bool
     {
-        return in_array($this->rol, ['admin', 'reportes']);
+        return $this->esAdmin() || (bool)$this->permiso_reportes;
     }
 
     /**
@@ -91,5 +113,42 @@ class User extends Authenticatable
             'reportes' => 'file-alt',
             default => 'user',
         };
+    }
+
+    /**
+     * Devuelve la URL de la foto de perfil del usuario o un fallback con iniciales estéticas.
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        if ($this->foto_perfil) {
+            return asset('storage/' . $this->foto_perfil);
+        }
+
+        // Generar un avatar basado en iniciales
+        $nameParts = explode(' ', trim($this->name));
+        $initials = '';
+        foreach ($nameParts as $part) {
+            if ($part !== '') {
+                $initials .= mb_substr($part, 0, 1);
+            }
+        }
+        $initials = mb_strtoupper(mb_substr($initials, 0, 2));
+
+        return 'https://ui-avatars.com/api/?name=' . urlencode($initials) . '&background=f97316&color=ffffff&bold=true&size=128';
+    }
+
+    public function notificaciones()
+    {
+        return $this->hasMany(Notificacion::class, 'user_id');
+    }
+
+    public function iniciosSesion()
+    {
+        return $this->hasMany(InicioSesion::class, 'user_id');
+    }
+
+    public function notificacionesNoLeidasCount(): int
+    {
+        return $this->notificaciones()->where('leido', false)->count();
     }
 }

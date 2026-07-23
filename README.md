@@ -1,58 +1,137 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema de Gestión de Inventario — Sección Catalina (Empresa Minera Torrez S.R.L.)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Este repositorio contiene el **Sistema de Gestión de Inventario** desarrollado en Laravel. A continuación se presentan las instrucciones detalladas paso a paso para clonar e instalar este proyecto en cualquier otro dispositivo sin errores.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📋 Requisitos Previos
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Antes de comenzar, asegúrate de tener instalado en el dispositivo de destino:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. **PHP >= 8.2** (con las extensiones requeridas por Laravel: `mbstring`, `openssl`, `pdo`, `xml`, `zip`, etc.)
+2. **Composer** (Manejador de dependencias de PHP)
+3. **Node.js** (versión LTS recomendada) y **NPM**
+4. **Servidor de Base de Datos MySQL/MariaDB** (por ejemplo, a través de XAMPP, Laragon, Docker o una instalación local directa)
+5. **Git** (para clonar y gestionar el repositorio)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 Pasos para la Instalación y Puesta en Marcha
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Sigue estos pasos en el orden indicado:
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
+### 1. Clonar el Repositorio
+Abre una terminal o consola de comandos en la carpeta donde deseas guardar el proyecto y ejecuta:
 ```bash
-composer require laravel/boost --dev
+git clone <URL_DEL_REPOSITORIO> "sistema-inventario"
+```
+*(Reemplaza `<URL_DEL_REPOSITORIO>` por el enlace HTTPS o SSH de tu repositorio en GitHub/GitLab)*
 
-php artisan boost:install
+Ingresa a la carpeta del proyecto:
+```bash
+cd "sistema-inventario"
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Instalar Dependencias de PHP
+Ejecuta el siguiente comando para descargar e instalar todas las librerías necesarias del backend (incluyendo Laravel Framework y los paquetes de exportación):
+```bash
+composer install
+```
 
-## Contributing
+### 3. Instalar Dependencias de Frontend (Node.js)
+Instala los paquetes de Javascript necesarios para Vite y TailwindCSS:
+```bash
+npm install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 4. Configurar el Archivo de Entorno (`.env`)
+Laravel utiliza el archivo `.env` para almacenar credenciales seguras y configuraciones específicas del dispositivo local.
+1. Copia el archivo de plantilla de ejemplo:
+   - **En Windows (PowerShell/CMD):**
+     ```powershell
+     copy .env.example .env
+     ```
+   - **En Linux/macOS:**
+     ```bash
+     cp .env.example .env
+     ```
+2. Abre el archivo `.env` recién creado en un editor de texto y configura las variables de conexión a tu base de datos local:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306         # Cambia al puerto de tu MySQL local (ej: 3308 en XAMPP si lo modificaste)
+   DB_DATABASE=sistema_inventario
+   DB_USERNAME=root     # Tu usuario de MySQL
+   DB_PASSWORD=         # Tu contraseña de MySQL (vacío por defecto en XAMPP/Laragon)
+   ```
 
-## Code of Conduct
+### 5. Generar la Clave Única de la Aplicación
+Genera la clave cifrada de seguridad requerida por Laravel para encriptar sesiones y cookies:
+```bash
+php artisan key:generate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 6. Configurar la Base de Datos
+1. Abre tu gestor de base de datos preferido (phpMyAdmin, DBeaver, HeidiSQL o consola MySQL) y **crea una base de datos vacía** llamada `sistema_inventario` (o el nombre que configuraste en tu `.env`).
+2. Una vez creada, elige una de las siguientes opciones para poblar la base de datos:
+   - **Opción A (Migrar desde Cero con Datos Iniciales):**
+     Si quieres crear las tablas vacías e insertar los roles, permisos y usuarios iniciales definidos en el sistema:
+     ```bash
+     php artisan migrate --seed
+     ```
+   - **Opción B (Importar un Respaldo Existente):**
+     Si deseas restaurar los datos reales acumulados, puedes importar el dump SQL más reciente (por ejemplo, `database_dump.sql` o un archivo de respaldo guardado en la carpeta de copias de seguridad) directamente en la base de datos vacía usando la interfaz de phpMyAdmin o la consola de comandos.
 
-## Security Vulnerabilities
+### 7. Crear el Enlace de Almacenamiento (Storage Link)
+Crea el enlace simbólico para que los archivos subidos al servidor de almacenamiento privado sean accesibles desde la web pública:
+```bash
+php artisan storage:link
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 8. Compilar los Recursos del Frontend
+Compila y procesa los estilos CSS y scripts JS con Vite:
+- **Para desarrollo local activo (tiempo real):**
+  ```bash
+  npm run dev
+  ```
+- **Para compilar en producción (archivos finales optimizados):**
+  ```bash
+  npm run build
+  ```
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 🏃 Servidores en Ejecución
+
+Para trabajar en el entorno de desarrollo local, debes tener tres procesos corriendo (puedes abrirlos en terminales separadas):
+
+1. **Servidor Web de Laravel (Servidor Backend):**
+   ```bash
+   php artisan serve
+   ```
+   *Acceso directo:* Abre tu navegador en [http://127.0.0.1:8000](http://127.0.0.1:8000)
+
+2. **Compilador en Vivo de Vite (Frontend):**
+   ```bash
+   npm run dev
+   ```
+
+3. **Programador de Tareas (Laravel Scheduler):**
+   *¡Muy importante!* El sistema cuenta con un sistema de autolimpieza que borra registros viejos de la bitácora automáticamente cada 24 horas. Para que esto funcione de forma local, ejecuta:
+   ```bash
+   php artisan schedule:work
+   ```
+   *(En producción, se debe agregar un cron job apuntando a `php artisan schedule:run` en el servidor web)*
+
+---
+
+## 🛠️ Solución de Problemas Comunes
+
+- **Error: "SQLSTATE[HY000] [2002] Connection refused"**
+  - Verifica que tu servicio de base de datos MySQL esté activo y ejecutándose.
+  - Asegúrate de que el puerto (`DB_PORT`) en tu archivo `.env` sea el mismo que usa tu servidor local MySQL.
+- **Error: "Internal Server Error 500" o páginas en blanco**
+  - Asegúrate de haber ejecutado `php artisan key:generate`.
+  - Corre `php artisan config:clear` y `php artisan cache:clear` para refrescar configuraciones guardadas en la caché.
+- **Los cambios en la interfaz o estilos no se ven reflejados**
+  - Corre `npm run build` para asegurar la compilación de recursos finales.
