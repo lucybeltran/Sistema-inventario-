@@ -336,6 +336,68 @@
         transform: translateY(-1px);
         box-shadow: 0 6px 15px rgba(217, 119, 6, 0.3);
     }
+
+    /* Switch Premium Toggle */
+    .switch-container {
+        position: relative;
+        display: inline-block;
+        width: 48px;
+        height: 26px;
+        flex-shrink: 0;
+    }
+    .switch-container input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .switch-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #cbd5e1;
+        transition: .3s;
+        border-radius: 34px;
+    }
+    .switch-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    input:checked + .switch-slider {
+        background-color: #d97706;
+    }
+    input:checked + .switch-slider:before {
+        transform: translateX(22px);
+    }
+
+    /* Indicador de Estado Pulso */
+    .glow-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .glow-dot.active {
+        background-color: #10b981;
+        box-shadow: 0 0 10px #10b981;
+        animation: pulse 1.8s infinite;
+    }
+    .glow-dot.disabled {
+        background-color: #94a3b8;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
 </style>
 @endpush
 
@@ -390,18 +452,21 @@
                 
                 {{-- Columna 1: Interruptor y Estado General --}}
                 <div class="backup-schedule-col" style="border-right: 1.5px solid var(--border); padding-right: 20px;">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
                         <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(217, 119, 6, 0.08); display: flex; align-items: center; justify-content: center; color: #d97706; font-size: 16px; flex-shrink: 0;">
                             <i class="fas fa-power-off"></i>
                         </div>
                         <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: var(--text-primary);">Estado del Servicio</h4>
                     </div>
                     
-                    <label style="display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 700; color: var(--text-primary); cursor: pointer; margin-bottom: 10px;">
-                        <input type="checkbox" id="backup_auto_habilitado" name="habilitado" value="1" {{ ($config['habilitado'] ?? '0') === '1' ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #d97706; cursor: pointer;">
-                        Activar respaldos automáticos
-                    </label>
-                    <p style="margin: 0 0 0 28px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <label class="switch-container">
+                            <input type="checkbox" id="backup_auto_habilitado" name="habilitado" value="1" {{ ($config['habilitado'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <span class="switch-slider"></span>
+                        </label>
+                        <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Activar respaldos automáticos</span>
+                    </div>
+                    <p style="margin: 0; font-size: 12.5px; color: var(--text-muted); line-height: 1.5;">
                         Cuando está activo, el servidor ejecutará y guardará copias de seguridad de la base de datos e imágenes en segundo plano.
                     </p>
                 </div>
@@ -451,14 +516,22 @@
                     </div>
 
                     {{-- Card/Badge del próximo respaldo --}}
-                    <div id="info-proximo-backup" style="flex-grow: 1; margin-bottom: 15px; border-radius: 12px; padding: 14px; display: flex; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; transition: all 0.3s ease; border: 1.5px dashed var(--border); background: var(--bg-main);">
+                    <div id="info-proximo-backup" style="flex-grow: 1; margin-bottom: 12px; border-radius: 12px; padding: 14px; display: flex; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; transition: all 0.3s ease; border: 1.5px dashed var(--border); background: var(--bg-main);">
                         <!-- Se calcula dinámicamente con JS -->
                     </div>
 
-                    {{-- Botón Guardar --}}
-                    <button type="button" onclick="guardarConfiguracionBackup()" class="btn-save-schedule" style="width: 100%; justify-content: center; height: 42px; font-size: 14px;">
-                        <i class="fas fa-save"></i> Guardar Programación
-                    </button>
+                    {{-- Botones de Acción --}}
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        {{-- Botón Guardar --}}
+                        <button type="button" onclick="guardarConfiguracionBackup()" class="btn-save-schedule" style="width: 100%; justify-content: center; height: 42px; font-size: 14px;">
+                            <i class="fas fa-save"></i> Guardar Programación
+                        </button>
+                        
+                        {{-- Botón Probar Programación --}}
+                        <button type="button" onclick="probarProgramacionBackup()" class="backup-btn-action" style="width: 100%; justify-content: center; height: 42px; font-size: 13.5px; border-color: rgba(217, 119, 6, 0.25) !important; color: #d97706 !important; background: rgba(217, 119, 6, 0.06) !important; margin: 0; border-radius: 10px !important; box-sizing: border-box;" onmouseover="this.style.background='#d97706'; this.style.color='white'; this.style.borderColor='#d97706';" onmouseout="this.style.background='rgba(217, 119, 6, 0.06)'; this.style.color='#d97706'; this.style.borderColor='rgba(217, 119, 6, 0.25)';">
+                            <i class="fas fa-play"></i> Probar Programación Ahora
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -841,7 +914,9 @@
         if (!infoProximo) return;
         
         if (!habilitado) {
-            infoProximo.innerHTML = '<span style="color: var(--text-muted);"><i class="fas fa-ban"></i> Respaldos automáticos desactivados</span>';
+            infoProximo.innerHTML = '<div style="padding: 10px 0;"><span class="glow-dot disabled" style="margin-bottom: 6px;"></span><br><span style="color: var(--text-muted); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Desactivado</span><br><span style="font-size:11.5px; color:var(--text-secondary); opacity:0.8; display:block; margin-top:2px;">Respaldos automáticos apagados</span></div>';
+            infoProximo.style.borderColor = 'var(--border)';
+            infoProximo.style.background = 'var(--bg-main)';
             return;
         }
 
@@ -851,12 +926,16 @@
 
         if (frecuencia === 'fecha_unica') {
             if (!fechaUnica) {
-                infoProximo.innerHTML = '<span style="color: #ef4444; font-size:12.5px;"><i class="fas fa-exclamation-circle"></i> Selecciona fecha de ejecución</span>';
+                infoProximo.innerHTML = '<div style="padding: 10px 0;"><span style="color: #ef4444; font-size:12px; font-weight:700;"><i class="fas fa-exclamation-circle" style="font-size:16px; margin-bottom:4px; display:block;"></i> SELECCIONA FECHA</span></div>';
+                infoProximo.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                infoProximo.style.background = 'rgba(239, 68, 68, 0.03)';
                 return;
             }
             const partes = fechaUnica.split('-');
             const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
-            infoProximo.innerHTML = `<span style="color: #ea580c; font-weight:700;"><i class="fas fa-calendar-check"></i> Próximo: ${fechaFormateada} a las ${horaInput}</span>`;
+            infoProximo.innerHTML = `<div style="padding: 6px 0;"><span class="glow-dot active" style="margin-bottom: 6px; background-color:#ea580c; box-shadow:0 0 10px #ea580c;"></span><br><span style="color: #ea580c; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Fecha Única</span><br><span style="font-size:13px; color:var(--text-primary); font-weight:700; margin-top:3px; display:block;">${fechaFormateada} a las ${horaInput}</span></div>`;
+            infoProximo.style.borderColor = 'rgba(234, 88, 12, 0.3)';
+            infoProximo.style.background = 'rgba(234, 88, 12, 0.04)';
         } else if (frecuencia === 'ultimo_dia_mes') {
             const hoy = new Date();
             const [hora, min] = horaInput.split(':').map(Number);
@@ -876,7 +955,9 @@
             const anio = fechaProxima.getFullYear();
             const fechaFormateada = `${dia}/${mes}/${anio}`;
 
-            infoProximo.innerHTML = `<span style="color: #10b981; font-weight:700;"><i class="fas fa-calendar-check"></i> Próximo: ${fechaFormateada} a las ${horaInput} (Fin de mes)</span>`;
+            infoProximo.innerHTML = `<div style="padding: 6px 0;"><span class="glow-dot active" style="margin-bottom: 6px;"></span><br><span style="color: #10b981; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Fin de Mes</span><br><span style="font-size:13px; color:var(--text-primary); font-weight:700; margin-top:3px; display:block;">${fechaFormateada} a las ${horaInput}</span></div>`;
+            infoProximo.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            infoProximo.style.background = 'rgba(16, 185, 129, 0.04)';
         }
     }
 
@@ -967,6 +1048,73 @@
                 background: isDark ? '#1e293b' : '#ffffff',
                 color: isDark ? '#f1f5f9' : '#1e293b',
             });
+        });
+    }
+
+    // Ejecutar una prueba del cron de backup automático de forma inmediata
+    function probarProgramacionBackup() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        Swal.fire({
+            title: '¿Ejecutar respaldo de prueba?',
+            text: 'Se iniciará la creación inmediata del backup automático (base de datos + archivos del storage) para verificar su correcto funcionamiento.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#d97706',
+            cancelButtonColor: '#475569',
+            confirmButtonText: 'Sí, probar ahora',
+            cancelButtonText: 'Cancelar',
+            background: isDark ? '#1e293b' : '#ffffff',
+            color: isDark ? '#f1f5f9' : '#1e293b',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showLoader('Ejecutando Prueba', 'Comprimiendo storage y generando archivo SQL...');
+                
+                fetch("{{ route('backups.testCron') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    hideLoader();
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Prueba Exitosa!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#10b981',
+                            background: isDark ? '#1e293b' : '#ffffff',
+                            color: isDark ? '#f1f5f9' : '#1e293b',
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error de Prueba',
+                            text: data.error || 'No se pudo generar el respaldo de prueba.',
+                            icon: 'error',
+                            confirmButtonColor: '#ef4444',
+                            background: isDark ? '#1e293b' : '#ffffff',
+                            color: isDark ? '#f1f5f9' : '#1e293b',
+                        });
+                    }
+                })
+                .catch(err => {
+                    hideLoader();
+                    console.error(err);
+                    Swal.fire({
+                        title: 'Error de conexión',
+                        text: 'Ocurrió un error al intentar comunicarse con el servidor.',
+                        icon: 'error',
+                        confirmButtonColor: '#ef4444',
+                        background: isDark ? '#1e293b' : '#ffffff',
+                        color: isDark ? '#f1f5f9' : '#1e293b',
+                    });
+                });
+            }
         });
     }
 </script>

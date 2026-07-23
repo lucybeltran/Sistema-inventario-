@@ -58,3 +58,15 @@ Schedule::call(function () {
         \Illuminate\Support\Facades\Log::error("Error en backup automático: " . $e->getMessage());
     }
 })->everyMinute()->name('backup:automatico')->withoutOverlapping();
+
+// Comando Artisan para probar el backup automático manualmente
+Artisan::command('backup:run-automatico', function () {
+    $this->info("Iniciando generación forzada del backup automático (Base de datos + Storage)...");
+    try {
+        $backupController = new \App\Http\Controllers\BackupController();
+        $resultado = $backupController->generarRespaldoInterno('Sistema (Prueba Forzada)');
+        $this->info("Backup ZIP creado con éxito: " . $resultado['filename']);
+    } catch (\Exception $e) {
+        $this->error("Error al ejecutar backup: " . $e->getMessage());
+    }
+})->purpose('Ejecuta el backup automático de forma inmediata para pruebas');
