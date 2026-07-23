@@ -86,7 +86,11 @@ class ProfileController extends Controller
         $user->iniciosSesion()->delete();
 
         // Volver a registrar la sesión actual
-        \App\Models\InicioSesion::registrarInicioSesion($user);
+        \App\Models\InicioSesion::create([
+            'user_id' => $user->id,
+            'ip_address' => $request->ip() ?? '127.0.0.1',
+            'user_agent' => $request->userAgent() ?? 'Desconocido',
+        ]);
 
         return Redirect::route('profile.edit')->with('success', 'El historial de dispositivos y accesos se ha limpiado correctamente.');
     }
