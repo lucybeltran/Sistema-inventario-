@@ -1968,6 +1968,10 @@
         if (workerSelect) {
             workerSelect.addEventListener('change', performSearch);
         }
+        const nivelSelect = document.querySelector('select[name="nivel"]');
+        if (nivelSelect) {
+            nivelSelect.addEventListener('change', performSearch);
+        }
         if (fromDateInput) {
             fromDateInput.addEventListener('change', performSearch);
         }
