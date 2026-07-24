@@ -35,6 +35,11 @@ class MovimientoController extends Controller
             $query->where('trabajador_id', $request->trabajador_id);
         }
 
+        if ($request->filled('nivel')) {
+            $query->whereNull('trabajador_id')
+                  ->where('trabajador_nombre', $request->nivel);
+        }
+
         $periodo = $request->input('periodo');
         if (!$request->has('periodo') && !$request->filled('fecha_desde') && !$request->filled('fecha_hasta')) {
             $periodo = 'mensual';
@@ -126,6 +131,17 @@ class MovimientoController extends Controller
                              ->get();
         $trabajadores = Trabajador::activos()->orderBy('nombre')->get();
 
+        $niveles = Movimiento::where('tipo', 'salida')
+            ->whereNull('trabajador_id')
+            ->whereNotNull('trabajador_nombre')
+            ->where('trabajador_nombre', '!=', '')
+            ->distinct()
+            ->pluck('trabajador_nombre')
+            ->map(fn($n) => trim($n))
+            ->unique()
+            ->sort()
+            ->values();
+
         $proximoNumeroNota = Movimiento::siguienteNumeroNota();
 
         // Para calcular el monto total gastado en entradas (sin paginación)
@@ -195,7 +211,7 @@ class MovimientoController extends Controller
                 'fecha'  => $m->created_at->format('d/m/Y'),
             ]);
 
-        return view('movimientos.index', compact('movimientos', 'articulos', 'trabajadores', 'proximoNumeroNota', 'totalGastado', 'preciosUltimos'));
+        return view('movimientos.index', compact('movimientos', 'articulos', 'trabajadores', 'niveles', 'proximoNumeroNota', 'totalGastado', 'preciosUltimos'));
     }
 
     public function store(Request $request)

@@ -273,6 +273,7 @@
 }
 .rpt-form-grid.cols-2 { grid-template-columns: 1fr 1fr; }
 .rpt-form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.rpt-form-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
 
 .rpt-field {
     display: flex;
@@ -725,7 +726,8 @@
 @media (max-width: 768px) {
     .rpt-tab-content { padding: 20px; }
     .rpt-form-grid.cols-2,
-    .rpt-form-grid.cols-3 { grid-template-columns: 1fr; }
+    .rpt-form-grid.cols-3,
+    .rpt-form-grid.cols-4 { grid-template-columns: 1fr; }
     .rpt-inv-right { width: 100%; }
     .rpt-inv-right .btn-rpt { flex: 1; }
 }
@@ -875,7 +877,7 @@
                     <i class="fas fa-filter"></i> Filtros de Búsqueda
                 </div>
 
-                <div class="rpt-form-grid cols-3" style="margin-bottom: 12px;">
+                <div class="rpt-form-grid cols-4" style="margin-bottom: 12px;">
                     <div class="rpt-field">
                         <label><i class="fas fa-exchange-alt"></i> Tipo de movimiento</label>
                         <select id="filtro_tipo_mov">
@@ -892,6 +894,15 @@
                                 <option value="{{ $t->id }}">
                                     {{ $t->nombre }} @if($t->codigo)[{{ $t->codigo }}]@endif @if($t->ayudante)(Ayudante: {{ $t->ayudante }})@endif
                                 </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="rpt-field">
+                        <label><i class="fas fa-layer-group"></i> Nivel de Mina</label>
+                        <select id="filtro_nivel_mov">
+                            <option value="">Todos los niveles</option>
+                            @foreach($niveles as $n)
+                                <option value="{{ $n }}">{{ $n }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -1624,6 +1635,7 @@ function cargarVistaPreviaMovimientos() {
         const desde        = document.getElementById('mov_desde').value;
         const hasta        = document.getElementById('mov_hasta').value;
         const trabajadorId = document.getElementById('filtro_trabajador_mov').value;
+        const nivel        = document.getElementById('filtro_nivel_mov') ? document.getElementById('filtro_nivel_mov').value : '';
         const tipo         = document.getElementById('filtro_tipo_mov').value;
         const incluirIni   = document.getElementById('mov_incluir_inicial').checked ? '1' : '0';
         const previewArea  = document.getElementById('preview-live-movimientos');
@@ -1639,6 +1651,7 @@ function cargarVistaPreviaMovimientos() {
         if (desde)        params.append('desde', desde);
         if (hasta)        params.append('hasta', hasta);
         if (trabajadorId) params.append('trabajador_id', trabajadorId);
+        if (nivel)        params.append('nivel', nivel);
         if (tipo)         params.append('tipo', tipo);
         if (articuloId)   params.append('articulo_id', articuloId);
         if (incluirIni === '1') params.append('incluir_inicial', '1');
@@ -1706,7 +1719,7 @@ function cargarVistaPreviaMovimientos() {
 }
 
 // Escuchadores
-['filtro_trabajador_mov','mov_desde','mov_hasta','mov_incluir_inicial'].forEach(id => {
+['filtro_trabajador_mov','filtro_nivel_mov','mov_desde','mov_hasta','mov_incluir_inicial'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', () => {
         actualizarPreviewMovimientos();
         cargarVistaPreviaMovimientos();
@@ -1715,8 +1728,15 @@ function cargarVistaPreviaMovimientos() {
 
 document.getElementById('filtro_tipo_mov').addEventListener('change', function() {
     const trab = document.getElementById('filtro_trabajador_mov');
-    if (this.value === 'entrada') { trab.value = ''; trab.disabled = true; }
-    else                          { trab.disabled = false; }
+    const nivel = document.getElementById('filtro_nivel_mov');
+    if (this.value === 'entrada') {
+        trab.value = '';
+        trab.disabled = true;
+        if (nivel) { nivel.value = ''; nivel.disabled = true; }
+    } else {
+        trab.disabled = false;
+        if (nivel) { nivel.disabled = false; }
+    }
     actualizarPreviewMovimientos();
     cargarVistaPreviaMovimientos();
 });
@@ -1751,6 +1771,7 @@ function descargarMovimientos(formato) {
     const desde       = document.getElementById('mov_desde').value;
     const hasta       = document.getElementById('mov_hasta').value;
     const trab        = document.getElementById('filtro_trabajador_mov').value;
+    const nivel       = document.getElementById('filtro_nivel_mov') ? document.getElementById('filtro_nivel_mov').value : '';
     const tipo        = document.getElementById('filtro_tipo_mov').value;
     const ini         = document.getElementById('mov_incluir_inicial').checked ? '1' : '0';
     const articuloId  = document.getElementById('filtro_articulo_mov_id').value;
@@ -1763,6 +1784,7 @@ function descargarMovimientos(formato) {
     if (desde)       p.push('desde='  + desde);
     if (hasta)       p.push('hasta='  + hasta);
     if (trab)        p.push('trabajador_id=' + trab);
+    if (nivel)       p.push('nivel='  + encodeURIComponent(nivel));
     if (tipo)        p.push('tipo='   + tipo);
     if (articuloId)  p.push('articulo_id=' + articuloId);
     if (ini === '1') p.push('incluir_inicial=1');

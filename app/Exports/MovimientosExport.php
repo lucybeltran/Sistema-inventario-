@@ -21,6 +21,7 @@ class MovimientosExport implements FromArray, WithHeadings, WithTitle, WithColum
     protected $tipo;
     protected $incluirInicial;
     protected $articuloId;
+    protected $nivel;
 
     protected $filas = [];
     protected $totalMovimientos = 0;
@@ -30,7 +31,7 @@ class MovimientosExport implements FromArray, WithHeadings, WithTitle, WithColum
     protected $sumaTotalValores = 0;
     protected $filaTotales = 0;
 
-    public function __construct($desde = null, $hasta = null, $trabajadorId = null, $tipo = null, $incluirInicial = false, $articuloId = null)
+    public function __construct($desde = null, $hasta = null, $trabajadorId = null, $tipo = null, $incluirInicial = false, $articuloId = null, $nivel = null)
     {
         $this->desde         = $desde;
         $this->hasta         = $hasta;
@@ -38,6 +39,7 @@ class MovimientosExport implements FromArray, WithHeadings, WithTitle, WithColum
         $this->tipo          = $tipo;
         $this->incluirInicial = $incluirInicial;
         $this->articuloId    = $articuloId;
+        $this->nivel         = $nivel;
     }
 
     public function array(): array
@@ -49,6 +51,11 @@ class MovimientosExport implements FromArray, WithHeadings, WithTitle, WithColum
         if ($this->trabajadorId) $query->where('trabajador_id', $this->trabajadorId);
         if ($this->tipo)        $query->where('tipo', $this->tipo);
         if ($this->articuloId)  $query->where('articulo_id', $this->articuloId);
+        
+        if ($this->nivel) {
+            $query->whereNull('trabajador_id')
+                  ->where('trabajador_nombre', $this->nivel);
+        }
         if (!$this->incluirInicial) {
             $query->where(function ($q) {
                 $q->where('tipo', 'salida')

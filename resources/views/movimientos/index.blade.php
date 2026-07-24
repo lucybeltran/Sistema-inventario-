@@ -635,6 +635,18 @@
                     @endforeach
                 </select>
             </div>
+            
+            <div class="form-field">
+                <label><i class="fas fa-layer-group"></i> Nivel de Mina</label>
+                <select name="nivel">
+                    <option value="">Todos los niveles</option>
+                    @foreach($niveles as $n)
+                        <option value="{{ $n }}" {{ request('nivel') == $n ? 'selected' : '' }}>
+                            {{ $n }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
         @endif
 
         <div class="form-field">

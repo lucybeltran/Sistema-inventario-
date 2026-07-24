@@ -153,6 +153,17 @@ class ReporteController extends Controller
         // Lista de trabajadores para el filtro
         $trabajadores = Trabajador::orderBy('nombre')->get();
 
+        $niveles = Movimiento::where('tipo', 'salida')
+            ->whereNull('trabajador_id')
+            ->whereNotNull('trabajador_nombre')
+            ->where('trabajador_nombre', '!=', '')
+            ->distinct()
+            ->pluck('trabajador_nombre')
+            ->map(fn($n) => trim($n))
+            ->unique()
+            ->sort()
+            ->values();
+
         // Cargar bitácora de auditoría si es administrador
         $logs = null;
         if (auth()->user()->esAdmin()) {
@@ -191,7 +202,8 @@ class ReporteController extends Controller
             'totalMovimientos',
             'articulosSinStock',
             'trabajadores',
-            'logs'
+            'logs',
+            'niveles'
         ));
     }
 
@@ -223,7 +235,8 @@ class ReporteController extends Controller
                 $request->trabajador_id,
                 $request->tipo,
                 $incluirInicial,
-                $request->articulo_id
+                $request->articulo_id,
+                $request->nivel
             ),
             "movimientos_" . now()->format('Y-m-d') . ".xlsx"
         );
@@ -280,6 +293,12 @@ class ReporteController extends Controller
         if ($request->trabajador_id) $query->where('trabajador_id', $request->trabajador_id);
         if ($request->tipo)         $query->where('tipo', $request->tipo);
         if ($request->articulo_id)  $query->where('articulo_id', $request->articulo_id);
+        
+        if ($request->nivel) {
+            $query->whereNull('trabajador_id')
+                  ->where('trabajador_nombre', $request->nivel);
+        }
+
         if (!$request->has('incluir_inicial') || $request->incluir_inicial != '1') {
             $query->where(function ($q) {
                 $q->where('tipo', 'salida')
@@ -312,8 +331,10 @@ class ReporteController extends Controller
             $articuloFiltro = \App\Models\Articulo::find($request->articulo_id);
         }
 
+        $nivelFiltro = $request->nivel;
+
         $pdf = Pdf::loadView('reportes.pdf.movimientos', compact(
-            'movimientos', 'desde', 'hasta', 'trabajadorFiltro', 'tipo', 'articuloFiltro'
+            'movimientos', 'desde', 'hasta', 'trabajadorFiltro', 'tipo', 'articuloFiltro', 'nivelFiltro'
         ));
         $pdf->setPaper('A4', 'landscape');
 
@@ -326,6 +347,9 @@ class ReporteController extends Controller
         } elseif ($trabajadorFiltro) {
             $nombreSlug = strtolower(str_replace(' ', '_', $trabajadorFiltro->nombre));
             $nombreArchivo = "movimientos_{$nombreSlug}_";
+        } elseif ($nivelFiltro) {
+            $nivelSlug = strtolower(str_replace(' ', '_', $nivelFiltro));
+            $nombreArchivo = "movimientos_{$nivelSlug}_";
         }
         $nombreArchivo .= now()->format('Y-m-d') . '.pdf';
 
@@ -1059,6 +1083,11 @@ class ReporteController extends Controller
         if ($request->trabajador_id) $query->where('trabajador_id', $request->trabajador_id);
         if ($request->tipo)          $query->where('tipo', $request->tipo);
         if ($request->articulo_id)   $query->where('articulo_id', $request->articulo_id);
+        
+        if ($request->nivel) {
+            $query->whereNull('trabajador_id')
+                  ->where('trabajador_nombre', $request->nivel);
+        }
         if (!$request->has('incluir_inicial') || $request->incluir_inicial != '1') {
             $query->where(function ($q) {
                 $q->where('tipo', 'salida')

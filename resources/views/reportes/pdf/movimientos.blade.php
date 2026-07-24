@@ -61,6 +61,9 @@
                     @if(isset($articuloFiltro) && $articuloFiltro)
                         &nbsp;·&nbsp; Material: <strong>{{ $articuloFiltro->codigo }} — {{ $articuloFiltro->nombre }}</strong>
                     @endif
+                    @if(isset($nivelFiltro) && $nivelFiltro)
+                        &nbsp;·&nbsp; Nivel: <strong>{{ $nivelFiltro }}</strong>
+                    @endif
                 </div>
             </td>
         </tr>
