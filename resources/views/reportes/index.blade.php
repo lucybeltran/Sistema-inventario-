@@ -271,9 +271,9 @@
     display: grid;
     gap: 12px;
 }
-.rpt-form-grid.cols-2 { grid-template-columns: 1fr 1fr; }
-.rpt-form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
-.rpt-form-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.rpt-form-grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.rpt-form-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.rpt-form-grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
 .rpt-field {
     display: flex;
@@ -293,6 +293,9 @@
 .rpt-field label i { color: var(--primary); font-size: 11px; }
 .rpt-field input,
 .rpt-field select {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     padding: 10px 13px;
     border: 1.5px solid var(--border);
     border-radius: 9px;
@@ -723,6 +726,9 @@
 }
 
 /* ----- RESPONSIVE ----- */
+@media (max-width: 1150px) {
+    .rpt-form-grid.cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 768px) {
     .rpt-tab-content { padding: 20px; }
     .rpt-form-grid.cols-2,
