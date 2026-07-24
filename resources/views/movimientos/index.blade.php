@@ -897,10 +897,7 @@
                 <div class="form-row">
                     <div class="form-group" style="flex: 1;">
                         <label><i class="fas fa-file-alt"></i> N° de Nota</label>
-                        <div class="numero-nota-display" style="padding: 10px 14px; background: rgba(0,0,0,0.03); border-radius: 8px; font-weight: 700;">
-                            <i class="fas fa-hashtag"></i>
-                            <span>{{ $proximoNumeroNota }}</span>
-                        </div>
+                        <input type="text" name="numero_nota" value="{{ old('numero_nota', $proximoNumeroNota) }}" required style="font-weight: 700;">
                     </div>
                     <div class="form-group" style="flex: 1;">
                         <label><i class="fas fa-calendar"></i> Fecha</label>

@@ -220,6 +220,7 @@ class MovimientoController extends Controller
         $reglas = [
             'tipo'               => 'required|in:entrada,salida',
             'fecha'              => 'required|date',
+            'numero_nota'        => 'required|string|max:100',
             'notas'              => 'nullable|string|max:500',
             'items.*.nota_item'  => 'nullable|string|max:300',
         ];
@@ -325,7 +326,7 @@ class MovimientoController extends Controller
                 }
             }
 
-            $numeroNota = Movimiento::siguienteNumeroNota();
+            $numeroNota = $request->input('numero_nota') ?: Movimiento::siguienteNumeroNota();
 
             DB::transaction(function () use ($request, $trabajadorNombre, $numeroNota) {
                 foreach ($request->items as $item) {
