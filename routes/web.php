@@ -45,10 +45,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/inventario/grupos/{id}', [InventarioController::class, 'updateGrupo'])->name('inventario.grupos.update');
         Route::get('/inventario/siguiente-codigo/{grupo_id}', [InventarioController::class, 'siguienteCodigo'])->name('inventario.siguiente-codigo');
 
-        // Rotación / Clasificación de Materiales
-        Route::get('/inventario/rotacion', [InventarioController::class, 'rotacionIndex'])->name('inventario.rotacion.index');
-        Route::post('/inventario/rotacion/cambiar/{articulo}', [InventarioController::class, 'cambiarRotacion'])->name('inventario.rotacion.cambiar');
-
         // Movimientos
         Route::post('/movimientos', [MovimientoController::class, 'store'])->name('movimientos.store');
         Route::get('/movimientos/lotes', [MovimientoController::class, 'getLotes'])->name('movimientos.lotes');
@@ -63,6 +59,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Trabajadores
         Route::post('/trabajadores', [TrabajadorController::class, 'store'])->name('trabajadores.store');
         Route::put('/trabajadores/{trabajador}', [TrabajadorController::class, 'update'])->name('trabajadores.update');
+    });
+
+    // ===== ADMIN, ALMACENERO Y REPORTES PUEDEN VER/CAMBIAR ROTACIÓN DE MATERIALES =====
+    Route::middleware('puede_editar_o_reportes')->group(function () {
+        Route::get('/inventario/rotacion', [InventarioController::class, 'rotacionIndex'])->name('inventario.rotacion.index');
+        Route::post('/inventario/rotacion/cambiar/{articulo}', [InventarioController::class, 'cambiarRotacion'])->name('inventario.rotacion.cambiar');
     });
 
     // ===== SOLO ADMIN (acciones críticas) =====

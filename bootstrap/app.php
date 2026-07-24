@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         'puede_editar' => \App\Http\Middleware\PuedeEditar::class,
         'solo_admin' => \App\Http\Middleware\SoloAdmin::class,
         'puede_reportes' => \App\Http\Middleware\PuedeReportes::class,
+        'puede_editar_o_reportes' => \App\Http\Middleware\PuedeEditarOReportes::class,
     ]);
 })
     ->withExceptions(function (Exceptions $exceptions): void {

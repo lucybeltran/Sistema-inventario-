@@ -2896,7 +2896,7 @@
                 <span>Inventario</span>
             </a>
 
-            @if(Auth::user()->puedeEditar())
+            @if(Auth::user()->puedeEditar() || Auth::user()->puedeReportes())
                 <a href="{{ route('inventario.rotacion.index') }}" class="sidebar-link {{ request()->routeIs('inventario.rotacion.*') ? 'active' : '' }}">
                     <i class="fas fa-arrows-spin"></i>
                     <span>Clasificación</span>
