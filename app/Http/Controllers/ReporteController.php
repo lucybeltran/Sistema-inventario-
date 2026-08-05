@@ -1127,9 +1127,9 @@ class ReporteController extends Controller
             }
         }
 
-        // Obtener los primeros 100 movimientos ordenados por fecha ascendente para la tabla de vista previa
-        $movimientos = $query->orderBy('fecha', 'asc')
-                             ->orderBy('created_at', 'asc')
+        // Obtener los primeros 100 movimientos ordenados por fecha descendente para la tabla de vista previa
+        $movimientos = $query->orderBy('fecha', 'desc')
+                             ->orderBy('created_at', 'desc')
                              ->limit(100)
                              ->get();
 
