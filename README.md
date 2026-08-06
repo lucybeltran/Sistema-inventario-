@@ -8,10 +8,10 @@ Este repositorio contiene el **Sistema de Gestión de Inventario** desarrollado 
 
 Antes de comenzar, asegúrate de tener instalado en el dispositivo de destino:
 
-1. **PHP >= 8.2** (con las extensiones requeridas por Laravel: `mbstring`, `openssl`, `pdo`, `xml`, `zip`, etc.)
+1. **PHP >= 8.2** (con las extensiones requeridas por Laravel: `mbstring`, `openssl`, `pdo`, `xml`, `zip`, `gd`, etc.)
 2. **Composer** (Manejador de dependencias de PHP)
 3. **Node.js** (versión LTS recomendada) y **NPM**
-4. **Servidor de Base de Datos MySQL/MariaDB** (por ejemplo, a través de XAMPP, Laragon, Docker o una instalación local directa)
+4. **Servidor de Base de Datos MySQL/MariaDB** (por ejemplo, a través de Laragon, XAMPP o instalación directa de MySQL)
 5. **Git** (para clonar y gestionar el repositorio)
 
 ---
@@ -23,9 +23,8 @@ Sigue estos pasos en el orden indicado:
 ### 1. Clonar el Repositorio
 Abre una terminal o consola de comandos en la carpeta donde deseas guardar el proyecto y ejecuta:
 ```bash
-git clone <URL_DEL_REPOSITORIO> "sistema-inventario"
+git clone https://github.com/lucybeltran/Sistema-inventario-.git "sistema-inventario"
 ```
-*(Reemplaza `<URL_DEL_REPOSITORIO>` por el enlace HTTPS o SSH de tu repositorio en GitHub/GitLab)*
 
 Ingresa a la carpeta del proyecto:
 ```bash
@@ -59,7 +58,7 @@ Laravel utiliza el archivo `.env` para almacenar credenciales seguras y configur
    ```env
    DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
-   DB_PORT=3306         # Cambia al puerto de tu MySQL local (ej: 3308 en XAMPP si lo modificaste)
+   DB_PORT=3308         # Cambia al puerto de tu MySQL local (ej: 3306, o 3308 en XAMPP/Laragon si lo modificaste)
    DB_DATABASE=sistema_inventario
    DB_USERNAME=root     # Tu usuario de MySQL
    DB_PASSWORD=         # Tu contraseña de MySQL (vacío por defecto en XAMPP/Laragon)
@@ -74,16 +73,23 @@ php artisan key:generate
 ### 6. Configurar la Base de Datos
 1. Abre tu gestor de base de datos preferido (phpMyAdmin, DBeaver, HeidiSQL o consola MySQL) y **crea una base de datos vacía** llamada `sistema_inventario` (o el nombre que configuraste en tu `.env`).
 2. Una vez creada, elige una de las siguientes opciones para poblar la base de datos:
-   - **Opción A (Migrar desde Cero con Datos Iniciales):**
-     Si quieres crear las tablas vacías e insertar los roles, permisos y usuarios iniciales definidos en el sistema:
+   - **Opción A (Importar el Respaldo Real Actual - RECOMENDADO):**
+     Si deseas restaurar los datos reales acumulados, puedes importar el dump SQL más reciente (`database_dump.sql`) directamente en la base de datos vacía.
+     - **Usando la Consola de Comandos:**
+       ```bash
+       mysql -h 127.0.0.1 -P 3308 -u root -p sistema_inventario < database_dump.sql
+       ```
+       *(Reemplaza el puerto, el usuario y la contraseña según tu entorno. Si no tienes contraseña, omite la opción `-p`)*
+     - **Usando phpMyAdmin:** 
+       Ingresa a phpMyAdmin, selecciona la base de datos `sistema_inventario`, haz clic en la pestaña **Importar**, selecciona el archivo `database_dump.sql` y presiona **Continuar**.
+   - **Opción B (Migrar desde Cero con Semillas de Prueba):**
+     Si quieres crear las tablas vacías e insertar únicamente los roles, permisos y usuarios iniciales limpios:
      ```bash
      php artisan migrate --seed
      ```
-   - **Opción B (Importar un Respaldo Existente):**
-     Si deseas restaurar los datos reales acumulados, puedes importar el dump SQL más reciente (por ejemplo, `database_dump.sql` o un archivo de respaldo guardado en la carpeta de copias de seguridad) directamente en la base de datos vacía usando la interfaz de phpMyAdmin o la consola de comandos.
 
 ### 7. Crear el Enlace de Almacenamiento (Storage Link)
-Crea el enlace simbólico para que los archivos subidos al servidor de almacenamiento privado sean accesibles desde la web pública:
+Crea el enlace simbólico para que los archivos subidos al servidor de almacenamiento privado (como imágenes de perfil o fotos) sean accesibles desde la web pública:
 ```bash
 php artisan storage:link
 ```
@@ -101,11 +107,24 @@ Compila y procesa los estilos CSS y scripts JS con Vite:
 
 ---
 
-## 🏃 Servidores en Ejecución
+## 🔑 Credenciales de Acceso Inicial (En caso de usar Opción B)
+
+Si poblaste la base de datos con la **Opción B (migraciones desde cero)**, se habrán creado los siguientes usuarios por defecto:
+
+* **Administrador:**
+  - **Usuario/Email:** `admin@mina.local`
+  - **Contraseña:** `admin123`
+* **Operador (Almacenero):**
+  - **Usuario/Email:** `operador1@mina.local` (u `operador2@mina.local`)
+  - **Contraseña:** `operador123`
+
+---
+
+## 🏃 Servidores en Ejecución (Entorno de Desarrollo)
 
 Para trabajar en el entorno de desarrollo local, debes tener tres procesos corriendo (puedes abrirlos en terminales separadas):
 
-1. **Servidor Web de Laravel (Servidor Backend):**
+1. **Servidor Web de Laravel (Backend):**
    ```bash
    php artisan serve
    ```
@@ -128,7 +147,7 @@ Para trabajar en el entorno de desarrollo local, debes tener tres procesos corri
 ## 🛠️ Solución de Problemas Comunes
 
 - **Error: "SQLSTATE[HY000] [2002] Connection refused"**
-  - Verifica que tu servicio de base de datos MySQL esté activo y ejecutándose.
+  - Verifica que tu servicio de base de datos MySQL/MariaDB esté activo y ejecutándose.
   - Asegúrate de que el puerto (`DB_PORT`) en tu archivo `.env` sea el mismo que usa tu servidor local MySQL.
 - **Error: "Internal Server Error 500" o páginas en blanco**
   - Asegúrate de haber ejecutado `php artisan key:generate`.
